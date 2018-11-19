@@ -1,0 +1,29 @@
+<project name="TraceDFA" default="run" basedir=".">
+	<!-- Comment -->
+
+	<property name="src" location="src"/>
+	<property name="build" location="build"/>
+
+	<target name="clean">
+		<delete dir="build"/>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="build/classes"/>
+		<javac srcdir="src" destdir="build/classes" includeantruntime="false"/>
+	</target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="build/jar"/>
+		<jar destfile="build/jar/TraceDFA.jar" basedir="build/classes">
+			<manifest>
+				<attribute name="Main-Class" value="Main"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="run" depends="jar">
+		<java jar="build/jar/TraceDFA.jar" fork="true"/>
+	</target>
+
+</project>
