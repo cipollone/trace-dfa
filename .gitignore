@@ -1,6 +1,9 @@
 # Project
 /build/
 
+# Java
+*.class
+
 # Vim
 *.swp
 *.swo
