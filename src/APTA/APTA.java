@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -176,6 +178,47 @@ public class APTA<LabelT>
 	}
 
 
+	/**
+	 * Extends this APTA with this sequence and sets the final response.
+	 * If the final response is UNKNOWN, the sequence is discarded.
+	 * Sequences are parsed from the root of the tree.
+	 * @param sequence A list of labels
+	 * @param response The response associated to the string
+	 * @return true if the sequence was added, false otherwise.
+	 */
+	private boolean addSequence(List<LabelT> sequence, TNode.Response response) {
+
+		// Checks
+		if (sequence == null) {
+			throw new IllegalArgumentException("Null sequence");
+		}
+		if (response == TNode.Response.UNKNOWN) {
+			return false; // Nothing to do
+		}
+
+		// Parse the sequence with the tree
+		TNode<LabelT> node = root;
+		int i;
+		for (i = 0; i < sequence.size(); ++i) {
+			TNode<LabelT> nextNode = node.followArc(sequence.get(i));
+			if (nextNode == null) { // If there is no such arc
+				break;
+			}
+			node = nextNode; // continue
+		}
+
+		// Extend the tree with the remaining sequence
+		for (; i < sequence.size(); ++i) {
+			node = newChild(node, sequence.get(i));
+		}
+
+		// Set the final state
+		node.setResponse(response);
+
+		return true;
+	}
+
+
 	// >>> Public functions
 	
 	/**
@@ -190,13 +233,29 @@ public class APTA<LabelT>
 
 
 	/**
-	 * Utility function to visualize small trees with Latex files.
+	 * Extends this APTA to accept this sequence.
+	 * @param sequence A list of labels
+	 */
+	public void acceptSequence(List<LabelT> sequence) {
+		addSequence(sequence, TNode.Response.ACCEPT);
+	}
+
+
+	/**
+	 * Extends this APTA to reject this sequence
+	 * @param sequence A list of labels
+	 */
+	public void rejectSequence(List<LabelT> sequence) {
+		addSequence(sequence, TNode.Response.REJECT);
+	}
+
+
+	/**
+	 * Utility function to visualize trees with Latex files.
 	 * The code produced is simple: it may only work with small trees.
 	 * If any error occurs when writing the file, false is returned.
 	 * NOTE: texFilePath is writted/overwritten. Parent folders are created if
 	 * necessary.
-	 * NOTE: assuming iterator() returns a pre-order depth first collection of
-	 * nodes.
 	 * @param texFile The path of the .tex file
 	 * @return True if no errors occurred
 	 */
@@ -274,21 +333,29 @@ public class APTA<LabelT>
 
 		// Build a tree
 		APTA<Character> tree = new APTA<Character>();
-		TNode<Character> n1 = tree.newChild(tree.root, 'a');
-		TNode<Character> n2 = tree.newChild(tree.root, 'b');
-		TNode<Character> n3 = tree.newChild(n1, 'c');
-		TNode<Character> n4 = tree.newChild(n2, 'c');
-		TNode<Character> n5 = tree.newChild(n2, 'd');
-		TNode<Character> n6 = tree.newChild(n4, 'f');
-		n5.setResponse(TNode.Response.ACCEPT);
-		n2.setResponse(TNode.Response.REJECT);
 
-		// Test iterator
-		for (TNode<Character> n: tree) {
-			System.out.println(n);
+		// Strings to add
+		String[] sequences = { "ciao", "ciar", "ci", "ca" };
+		boolean[] ok = { true, false, true, true };
+
+		// Test tree expansion
+		for (int i = 0; i < sequences.length; ++i) {
+
+			// Convert the sequence
+			ArrayList<Character> sequence = new ArrayList<Character>();
+			for (Character c: sequences[i].toCharArray()) {
+				sequence.add(c);
+			}
+
+			// Add the sequence
+			if (ok[i]) {
+				tree.acceptSequence(sequence);
+			} else {
+				tree.rejectSequence(sequence);
+			}
 		}
 
-		// Test latex representation
+		// Visualize the tree
 		tree.saveLatexFile(new File("latex-tree/tree.tex"));
 	}
 }
