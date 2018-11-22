@@ -4,25 +4,39 @@
 	<property name="src.dir" location="src"/>
 	<property name="build.dir" location="build"/>
 	<property name="lib.dir" location="lib"/>
+	<property name="doc.dir" value="doc"/>
 	<property name="main-class" value="Main"/>
-	<property name="jar-name" value="${ant.project.name}"/>
+	<property name="jar-name" value="${ant.project.name}.jar"/>
+
+	<!-- Settings -->
+	<property name="debugging" value="true"/>
+	<property name="doc-level" value="protected"/>
+
 
 	<!-- Targets -->
 
 	<target name="clean">
 		<delete dir="${build.dir}"/>
+		<delete dir="${doc.dir}"/>
+	</target>
+
+	<target name="doc">
+		<javadoc sourcepath="${src.dir}" destdir="${doc.dir}"
+			access="${doc-level}"/>
 	</target>
 
 	<target name="compile">
 		<mkdir dir="${build.dir}/classes"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}/classes"
-			includeantruntime="false">
+			includeantruntime="false" debug="${debugging}"
+			debuglevel="lines,vars,source">
 			<classpath>
 				<pathelement path="${classpath}"/>
 				<fileset dir="${lib.dir}">
 					<include name="**/*.jar"/>
 				</fileset>
 			</classpath>
+			<compilerarg value="-Xlint"/>
 		</javac>
 	</target>
 

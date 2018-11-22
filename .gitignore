@@ -1,6 +1,7 @@
 # Project
 /build/
 /lib/
+/doc/
 
 # Vim
 *.swp
