@@ -83,6 +83,15 @@ public class TNode<LabelT> {
 
 
 	/**
+	 * Get the id
+	 * @return The numeric id
+	 */
+	public long getId() {
+		return this.id;
+	}
+
+
+	/**
 	 * Set the response variable
 	 * @param response Reject, accept or unknown
 	 */
