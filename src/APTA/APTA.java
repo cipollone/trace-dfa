@@ -233,6 +233,32 @@ public class APTA<LabelT>
 
 
 	/**
+	 * Parse the sequence with this tree.
+	 * The tree is not modified.
+	 * @param sequence A list of labels
+	 * @return The result of parsing
+	 */
+	public TNode.Response parseSequence(List<LabelT> sequence) {
+
+		// Check
+		if (sequence == null) {
+			throw new IllegalArgumentException("Null sequence");
+		}
+
+		// Traverse the tree
+		TNode<LabelT> node = root;
+		for (LabelT label: sequence) {
+			node = node.followArc(label);
+			if (node == null) {
+				return TNode.Response.UNKNOWN; // Not expected
+			}
+		}
+
+		return node.getResponse();
+	}
+
+
+	/**
 	 * Extends this APTA to accept this sequence.
 	 * @param sequence A list of labels
 	 */
@@ -335,8 +361,8 @@ public class APTA<LabelT>
 		APTA<Character> tree = new APTA<Character>();
 
 		// Strings to add
-		String[] sequences = { "ciao", "ciar", "ci", "ca" };
-		boolean[] ok = { true, false, true, true };
+		String[] sequences = { "ciao", "ciar", "ci", "ca", ""};
+		boolean[] ok = { true, false, true, true, true };
 
 		// Test tree expansion
 		for (int i = 0; i < sequences.length; ++i) {
@@ -355,7 +381,21 @@ public class APTA<LabelT>
 			}
 		}
 
+		// Changing a node
+		tree.root.followArc('c').setResponse(TNode.Response.REJECT);
+
 		// Visualize the tree
-		tree.saveLatexFile(new File("latex-tree/tree.tex"));
+		tree.saveLatexFile(new File("latex/apta.tex"));
+
+		// Test parsing
+		String[] parseSequences = {"ciao", "c", "ca", "ciar", "cia", "cc", "d", ""};
+		for (String s: parseSequences) {
+			ArrayList<Character> sequence = new ArrayList<Character>();
+			for (Character c: s.toCharArray()) {
+				sequence.add(c);
+			}
+			System.out.print(s + ", len " + sequence.size() + ", result: ");
+			System.out.println(tree.parseSequence(sequence));
+		}
 	}
 }

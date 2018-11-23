@@ -2,6 +2,7 @@
 /build/
 /lib/
 /doc/
+/latex/
 
 # Vim
 *.swp
