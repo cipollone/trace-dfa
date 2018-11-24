@@ -1,11 +1,6 @@
 
 package automata;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-import java.io.IOException;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Stack;
@@ -13,13 +8,15 @@ import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.io.File;
+
 
 /**
  * Class for the Augmented Prefix Tree Acceptor (a tree).
  * LabelT should allow a simple conversion with the toString method.
  */
 public class APTA<LabelT>
-		implements Iterable<TNode<LabelT>> {
+		implements Iterable<TNode<LabelT>>, Automaton<LabelT>, LatexPrintableGraph {
 
 	// >>> Fields
 	
@@ -109,11 +106,12 @@ public class APTA<LabelT>
 
 	/**
 	 * Build LaTex tree representation.
-	 * Depth first visit of the tree. Helper function of saveLatexFile()
+	 * Depth first visit of the tree. Helper function.
 	 * NOTE: assuming the labels are not Latex special codes.
 	 * NOTE: assuming the labels have a nice string representation.
 	 * @param stringB The string representation: modified in place,initally empty
 	 * @param node The current node: initially root
+	 * @see APTA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation(StringBuilder stringB,
 			TNode<LabelT> node) {
@@ -238,7 +236,7 @@ public class APTA<LabelT>
 	 * @param sequence A list of labels
 	 * @return The result of parsing
 	 */
-	public TNode.Response parseSequence(List<LabelT> sequence) {
+	public TNode.Response parseSequenceAPTA(List<LabelT> sequence) {
 
 		// Check
 		if (sequence == null) {
@@ -255,6 +253,18 @@ public class APTA<LabelT>
 		}
 
 		return node.getResponse();
+	}
+
+
+	/**
+	 * Parse the sequence with binary output.
+	 * Positive just for ACCEPT responses.
+	 * @param sequence A list of labels
+	 * @return true if the sequence is accepted, false otherwise
+	 */
+	@Override
+	public boolean parseSequence(List<LabelT> sequence) {
+		return parseSequenceAPTA(sequence) == TNode.Response.ACCEPT;
 	}
 
 
@@ -277,78 +287,14 @@ public class APTA<LabelT>
 
 
 	/**
-	 * Utility function to visualize trees with Latex files.
-	 * The code produced is simple: it may only work with small trees.
-	 * If any error occurs when writing the file, false is returned.
-	 * NOTE: texFilePath is writted/overwritten. Parent folders are created if
-	 * necessary.
-	 * @param texFile The path of the .tex file
-	 * @return True if no errors occurred
+	 * Returns the body of a tikzpicture in Latex that represents this graph.
+	 * @return The string for this graph
 	 */
-	public boolean saveLatexFile(File texFile) {
-
-		// Latex file template
-		String latexFilePart1 =
-			"% Minimal LaTeX file for apta specification:\n" +
-			"%   use Tikz graph syntax between the two parts.\n" +
-			"% >> part1\n" +
-			"\\documentclass[tikz]{standalone}\n" +
-			"\\usepackage[T1]{fontenc}\n" +
-			"\\usepackage[utf8]{inputenc}\n" +
-			"\\usetikzlibrary{graphs}\n" +
-			"\\usetikzlibrary{arrows}\n" +
-			"\\usetikzlibrary{quotes}\n" +
-			"\\begin{document}\n" +
-			"\\begin{tikzpicture}[\n" +
-			"			accept/.style={double},\n" +
-			"			reject/.style={fill=gray}\n" +
-			"	]\n" +
-			"	\\graph [\n" +
-			"			grow right sep=2em,\n" +
-			"			nodes={draw,circle},\n" +
-			"			edges={>=stealth'},\n" +
-			"			edge quotes={auto}\n" +
-			"			]{\n" +
-			"% >> end of part1\n";
-		String latexFilePart2 = 
-			"\n" +
-			"% >> part2\n" +
-			"	};\n" +
-			"\\end{tikzpicture}\n" +
-			"\\end{document}\n";
-
-		// Write to TeX to file
-		BufferedWriter fileW = null;
-		try {
-
-			// Create the file
-			File parentDir = texFile.getParentFile();
-			if (parentDir != null) { parentDir.mkdirs(); }
-			fileW = new BufferedWriter(new FileWriter(texFile));
-
-			// Write the first part
-			fileW.write(latexFilePart1);
-
-			// Write the representation of the tree
-			StringBuilder stringB = new StringBuilder();
-			buildLatexRepresentation(stringB, root);
-			fileW.write(stringB.toString());
-
-			// Write the second part
-			fileW.write(latexFilePart2);
-
-			// just exception handling below
-		} catch (IOException e) {
-			return false;
-		} finally {
-			if (fileW != null) {
-				try {
-					fileW.close();
-				} catch (IOException e) {}
-			}
-		}
-
-		return true;
+	@Override
+	public String getLatexGraphRepresentation() {
+		StringBuilder stringB = new StringBuilder();
+		buildLatexRepresentation(stringB, root);
+		return stringB.toString();
 	}
 
 
@@ -360,42 +306,65 @@ public class APTA<LabelT>
 		// Build a tree
 		APTA<Character> tree = new APTA<Character>();
 
-		// Strings to add
-		String[] sequences = { "ciao", "ciar", "ci", "ca", ""};
+		// Sequences to add
+		String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
 		boolean[] ok = { true, false, true, true, true };
 
-		// Test tree expansion
-		for (int i = 0; i < sequences.length; ++i) {
-
-			// Convert the sequence
-			ArrayList<Character> sequence = new ArrayList<Character>();
-			for (Character c: sequences[i].toCharArray()) {
-				sequence.add(c);
+		// Convert the sequences
+		List<List<Character>> sequencesToAdd = new ArrayList<>();
+		for (int i = 0; i < stringsToAdd.length; ++i) {
+			List<Character> seq = new ArrayList<>();
+			sequencesToAdd.add(seq);
+			for (Character c: stringsToAdd[i].toCharArray()) {
+				seq.add(c);
 			}
+		}
 
-			// Add the sequence
+		// Strings to parse
+		String[] stringsToParse = {"ciao", "c", "ca", "ciar", "cia", "cc", "d", ""};
+
+		// Convert the sequences
+		List<List<Character>> sequencesToParse = new ArrayList<>();
+		for (int i = 0; i < stringsToParse.length; ++i) {
+			List<Character> seq = new ArrayList<>();
+			sequencesToParse.add(seq);
+			for (Character c: stringsToParse[i].toCharArray()) {
+				seq.add(c);
+			}
+		}
+
+		// Test tree expansion
+		for (int i = 0; i < sequencesToAdd.size(); ++i) {
 			if (ok[i]) {
-				tree.acceptSequence(sequence);
+				tree.acceptSequence(sequencesToAdd.get(i));
 			} else {
-				tree.rejectSequence(sequence);
+				tree.rejectSequence(sequencesToAdd.get(i));
 			}
 		}
 
 		// Changing a node
 		tree.root.followArc('c').setResponse(TNode.Response.REJECT);
 
-		// Visualize the tree
-		tree.saveLatexFile(new File("latex/apta.tex"));
-
 		// Test parsing
-		String[] parseSequences = {"ciao", "c", "ca", "ciar", "cia", "cc", "d", ""};
-		for (String s: parseSequences) {
-			ArrayList<Character> sequence = new ArrayList<Character>();
-			for (Character c: s.toCharArray()) {
-				sequence.add(c);
-			}
-			System.out.print(s + ", len " + sequence.size() + ", result: ");
-			System.out.println(tree.parseSequence(sequence));
+		System.out.println("APTA");
+		for (List<Character> sequence: sequencesToParse) {
+			System.out.print(sequence + "  ");
+			System.out.println(tree.parseSequenceAPTA(sequence));
 		}
+		System.out.println();
+
+		// Testing Automaton interface
+		System.out.println("Automaton");
+		Automaton<Character> automaton = tree;
+		for (List<Character> sequence: sequencesToParse) {
+			System.out.print(sequence + "  ");
+			System.out.println(automaton.parseSequence(sequence));
+		}
+		System.out.println();
+
+		// Testing LatexSaver class and LatexPrintableGraph interface
+		LatexPrintableGraph printableGraph = tree;
+		LatexSaver.saveLatexFile(printableGraph, new File("latex/apta.tex"), 1);
+
 	}
 }
