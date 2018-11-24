@@ -1,6 +1,5 @@
 
 import automata.APTA;
-import automata.TNode;
 
 
 public class Main {
