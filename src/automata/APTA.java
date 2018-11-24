@@ -27,7 +27,7 @@ public class APTA<LabelT>
 	private final TNode<LabelT> root = new TNode<LabelT>(0);
 
 	/* Sets and counters */
-	private long nodesNum = 1;    // The root is the initial node
+	private int nodesNum = 1;    // The root is the initial node
 
 
 	// >>> Private functions
@@ -395,7 +395,7 @@ public class APTA<LabelT>
 		// >>> Fields
 
 		/* Identifier */
-		private final long id;
+		private final int id;
 
 		/* Each state is labelled with a Response */
 		private Response response = Response.UNKNOWN;
@@ -436,7 +436,7 @@ public class APTA<LabelT>
 		 * Constructor: just set an id
 		 * @param id Any identifier
 		 */
-		public TNode(long id) {
+		public TNode(int id) {
 			this.id = id;
 		}
 
@@ -446,7 +446,7 @@ public class APTA<LabelT>
 		 * @param id Any identifier
 		 * @param response Whether the state should accept, reject or not specified
 		 */
-		public TNode(long id, Response response) {
+		public TNode(int id, Response response) {
 			this(id);
 			this.response = response;
 		}
@@ -456,7 +456,7 @@ public class APTA<LabelT>
 		 * Get the id
 		 * @return The numeric id
 		 */
-		public long getId() {
+		public int getId() {
 			return this.id;
 		}
 
