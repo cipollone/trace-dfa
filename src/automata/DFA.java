@@ -1,36 +1,234 @@
 
 package automata;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 
 /**
  * Deterministic Finite-States Automaton class.
  * Each transition is corresponds to a label of type LabelT.
+ * NOTE: destructive modifications are not allowed.
  */
-public class DFA<LabelT> {
+public class DFA<LabelT>
+		implements Iterable<DFA.ANode<LabelT>>, Automaton<LabelT> {
 
 	// >>> Fields
 	
 	/* The inital state */
+	private final ANode<LabelT> initialState;
+
+	/* A fail state for inexistent transitions */
+	private final ANode<LabelT> failState = new ANode<>(0);
+
+	/* Counter */
+	private int statesNum = 1; // Just the failState
+
+
+	// >> Private functions
+	
+	/**
+	 * Returns a new state to be added to the tree.
+	 * This should be the only function used to add new states.
+	 * The returned node is not connected to the graph.
+	 * @return A new ANode with a new id
+	 */
+	private ANode<LabelT> newNode() {
+		ANode<LabelT> node = new ANode<>(statesNum++);
+		node.setDefault(failState);
+		return node;
+	}
+
+
+	/**
+	 * Creates a new connection in the DFA.
+	 * @param parent The parent
+	 * @param label The label of the connection
+	 * @param child The child 
+	 */
+	private void newArc(ANode<LabelT> parent, LabelT label, ANode<LabelT> child) {
+
+		// Checks
+		if (parent == null || child == null || label == null) {
+			throw new IllegalArgumentException("Null argument");
+		}
+		if (parent.hasArc(label)) {
+			throw new IllegalArgumentException(
+					"Label " + label + " already exists from node " + parent);
+		}
+
+		// Connect
+		parent.addArc(label, child);
+	}
+
+
+	/**
+	 * Creates a new child of parent, connected with arc label.
+	 * @param parent The parent of the new node
+	 * @param label The label of the new arc
+	 * @return The created and attached node
+	 */
+	private ANode<LabelT> newChild(ANode<LabelT> parent, LabelT label) {
+
+		ANode<LabelT> child = newNode();
+		newArc(parent, label, child);
+		return child;
+	}
 
 
 	// >> Public functions
 	
+	/**
+	 * Constructor.
+	 */
+	public DFA() {
+
+		// Initialize the fields
+		statesNum = 0;
+		initialState = newNode(); // Id: 1
+		failState.setDefault(failState); // Looping
+		failState.setFinalFlag(false); // Just to be sure
+	}
+
+	
+	/**
+	 * Return a new iterator.
+	 * Iterates the nodes with DepthPreIterator, a depth first visit.
+	 * @return A new DepthPreIterator
+	 */
+	@Override
+	public Iterator<ANode<LabelT>> iterator() {
+		return new DepthPreIterator();
+	}
+
+
+	/**
+	 * Parse this sequence and return the result.
+	 * If the sequence has some not recognized labels, false is returned.
+	 * @param sequence A list of labels
+	 * @return true if the sequence is accepted, false otherwise
+	 */
+	@Override
+	public boolean parseSequence(List<LabelT> sequence) {
+
+		// Check
+		if (sequence == null) {
+			throw new IllegalArgumentException("Null sequence");
+		}
+
+		// Traverse the automaton
+		ANode<LabelT> node = initialState;
+		for (LabelT label: sequence) {
+			node = node.followArc(label);
+		}
+
+		return node.getFinalFlag();
+	}
+
+
 	/**
 	 * Debugging
 	 */
 	public static void test() {
 
 		// Testing ANode
-		ANode.test();
+		//ANode.test();
+		
+		// Testing new arcs
+		DFA<Character> dfa = new DFA<>();
+		ANode<Character> n1 = dfa.newChild(dfa.initialState, 'a');
+		ANode<Character> n2 = dfa.newChild(n1, 'b');
+		ANode<Character> n3 = dfa.newChild(n1, 'c');
+		dfa.newArc(n3, 'a', n1);
+		dfa.newArc(n3, 'g', n3);
+		n3.setFinalFlag(true);
+		dfa.initialState.setFinalFlag(true);
+
+		// Testing iterator
+		for (ANode<Character> n: dfa) {
+			System.out.println(n.toString() + " " + n.outArcs.toString());
+		}
+
+		// Strings to parse
+		String[] stringsToParse = {"", "a", "acacacac", "acgggggg", "ab", "d",
+				"nonsense"};
+
+		// Convert the sequences
+		List<List<Character>> sequencesToParse = new ArrayList<>();
+		for (int i = 0; i < stringsToParse.length; ++i) {
+			List<Character> seq = new ArrayList<>();
+			sequencesToParse.add(seq);
+			for (Character c: stringsToParse[i].toCharArray()) {
+				seq.add(c);
+			}
+		}
+
+		// Test parsing
+		Automaton<Character> automaton = dfa;
+		for (List<Character> sequence: sequencesToParse) {
+			System.out.print(sequence + "  ");
+			System.out.println(automaton.parseSequence(sequence));
+		}
 	}
 
 
 	// >>> Nested classes
 	
+	/**
+	 * Iterator class for depth-first visit of the graph.
+	 * Nodes are returned in pre-order.
+	 */
+	private class DepthPreIterator implements Iterator<ANode<LabelT>> {
+
+		/* Stack of remaining nodes */
+		private Stack<ANode<LabelT>> nodesLeft = new Stack<>();
+
+		/* Set of visited states */
+		private Set<ANode<LabelT>> visited = new HashSet<>();
+
+		
+		/* Constructor */
+		public DepthPreIterator() {
+			nodesLeft.add(initialState);
+			nodesLeft.add(failState);
+		}
+
+
+		@Override
+		public boolean hasNext() {
+			return !(visited.size() == statesNum);
+		}
+
+
+		@Override
+		public ANode<LabelT> next() {
+
+			// Termination
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+
+			// Find a new node
+			ANode<LabelT> node;
+			do {
+				node = nodesLeft.pop();
+			} while (visited.contains(node));
+			visited.add(node);
+
+			// Expand
+			Set<LabelT> labels = node.getLabels();
+			for (LabelT l: labels) {
+				ANode<LabelT> n = node.followArc(l);
+				if (!visited.contains(n)) {
+					nodesLeft.push(n);
+				}
+			}
+
+			// Return expanded
+			return node;
+		}
+	}
+
+
 	/**
 	 * Class for each node of the DFA.
 	 * Each node can be final (i.e. accepting), or not.
@@ -114,12 +312,21 @@ public class DFA<LabelT> {
 
 
 		/**
+		 * Returns whether label exists from the current node.
+		 * @param label The label to check
+		 */
+		public boolean hasArc(LabelT label) {
+			return outArcs.containsKey(label);
+		}
+
+
+		/**
 		 * Returns the node connected to the current node through the arc
 		 * labelled as label.
 		 * Following an non existend edge leads to the defaultOutArc (if it exists)
 		 * or raise an exception.
 		 * @param label The label of the arc
-		 * @return Connected node, or null if there was no such arc.
+		 * @return Connected node
 		 */
 		public ANode<LabelT> followArc(LabelT label) {
 
