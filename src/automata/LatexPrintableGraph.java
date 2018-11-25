@@ -10,8 +10,9 @@ public interface LatexPrintableGraph {
 
 	/**
 	 * Returns the body of a tikzpicture in Latex that represents this graph.
-	 * Acceptable node styles are default (no specification), "accept" and
-	 * "reject".  For example, a simple model might return:
+	 * Nodes can also have two custom styles "accept" and "reject". Arcs can also
+	 * use styles named "self loop" and "backward".
+	 * For example, a simple model might return:
 	 * <pre>{@code
 	 *		0 [accept] ->
 	 *		1 [reject,>"c"] -> {

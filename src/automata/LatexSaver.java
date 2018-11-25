@@ -45,14 +45,18 @@ public final class LatexSaver {
 			"\\usetikzlibrary{quotes}\n" +
 			"\\begin{document}\n" +
 			"\\begin{tikzpicture}[\n" +
+			"			>=stealth',\n" +
 			"			accept/.style={double},\n" +
-			"			reject/.style={fill=gray}\n" +
+			"			reject/.style={fill=gray},\n" +
+			"			backward/.style={bend right},\n" +
+			"			self loop/.style={to path={\n" +
+			"			.. controls +(70:1) and +(110:1) .. (\\tikztotarget) \\tikztonodes}}\n" +
 			"	]\n" +
 			"	\\graph [\n" +
-			"			grow right sep=" + spaceCm +"cm,\n" +
+			"			grow right sep=1.0cm,\n" +
+			"			branch down sep=0.6cm,\n" +
 			"			nodes={draw,circle},\n" +
-			"			edges={>=stealth'},\n" +
-			"			edge quotes={auto}\n" +
+			"			edge quotes={auto, font={\\scriptsize}}\n" +
 			"			]{\n" +
 			"% >> end of part1\n";
 		String latexFilePart2 = 

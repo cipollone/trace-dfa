@@ -11,7 +11,7 @@ import java.io.File;
  */
 public class APTA<LabelT>
 		implements Iterable<APTA.TNode<LabelT>>, Automaton<LabelT>, 
-							 LatexPrintableGraph {
+			LatexPrintableGraph {
 
 	// >>> Fields
 	
@@ -97,33 +97,18 @@ public class APTA<LabelT>
 			stringB.append(">\"").append(parentLabel.toString()).append("\"] ");
 		}
 
-
 		// Base case: no children
 		Set<LabelT> labels = node.getLabels();
 		if (labels.isEmpty()) { return; }
 
-		// Recursion with one child
-		if (labels.size() == 1) {
-			stringB.append("->");
-			TNode<LabelT> child = node.followArc(labels.iterator().next());
-			buildLatexRepresentation(stringB, child);
-		}
-		// Recurtion with more than one children
-		else {
-			stringB.append("-> {");
-
-			// Iterate all but the last one
-			int labelsNum = labels.size() - 1;
-			Iterator<LabelT> labelIt = labels.iterator();
-			while (labelsNum > 0) {
-				buildLatexRepresentation(stringB, node.followArc(labelIt.next()));
-				stringB.append(",");
-				labelsNum--;
-			}
-
-			// Write the last one
-			buildLatexRepresentation(stringB, node.followArc(labelIt.next()));
-			stringB.append("}");
+		// Recursion
+		stringB.append("-> {");
+		int i = labels.size();
+		for (LabelT l: labels) {
+			buildLatexRepresentation(stringB, node.followArc(l));
+			--i;
+			char sep = (i > 0) ? ',' : '}';
+			stringB.append(sep);
 		}
 	}
 

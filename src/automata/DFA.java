@@ -2,15 +2,22 @@
 package automata;
 
 import java.util.*;
+import java.io.File;
+
+import util.Pair;
 
 
 /**
  * Deterministic Finite-States Automaton class.
  * Each transition is corresponds to a label of type LabelT.
  * NOTE: destructive modifications are not allowed.
+ *
+ * TODO: modifications are not allowed yet; we need to be careful with
+ * IDs and unique node references.
  */
 public class DFA<LabelT>
-		implements Iterable<DFA.ANode<LabelT>>, Automaton<LabelT> {
+		implements Iterable<DFA.ANode<LabelT>>, Automaton<LabelT>,
+			LatexPrintableGraph {
 
 	// >>> Fields
 	
@@ -75,6 +82,117 @@ public class DFA<LabelT>
 	}
 
 
+	/**
+	 * Build LaTex tree representation.
+	 * Depth first visit of the graph. First part of the helper function:
+	 * just a spanning tree is printed.
+	 * NOTE: assuming the labels are not Latex special codes.
+	 * @param stringB The string representation, modified in place,initally empty
+	 * @param parent The parent node, initially null.
+	 * @param outLabel The label to go through, initially null.
+	 * @param visited Set of visited states, initially empty.
+	 * @param loops Arcs not printed because they form loops, initially empty.
+	 * @see DFA#getLatexGraphRepresentation
+	 */
+	private void buildLatexRepresentation1(StringBuilder stringB,
+			ANode<LabelT> parent, LabelT outLabel, Set<ANode<LabelT>> visited,
+			Set<Pair<ANode<LabelT>, LabelT>> loops) {
+
+		stringB.append("\n\t\t");
+
+		// Get the current node
+		ANode<LabelT> node;
+		if (parent != null) {
+			node = parent.followArc(outLabel);
+		} else {
+			node = initialState;
+		}
+
+		// If this is already drawn, save for later
+		if (visited.contains(node)) {
+			Pair<ANode<LabelT>, LabelT> arc = new Pair<>(parent, outLabel);
+			loops.add(arc);
+			return;
+		}
+
+		// Read this node
+		visited.add(node);
+		Set<LabelT> labels = node.getLabels();
+
+		// Add the node id
+		stringB.append(node.getId()).append(' ');
+
+		// Add final, if that is the case
+		boolean openBracket = false;
+		if (node.getFinalFlag()) {
+			stringB.append("[accept");
+			openBracket = true;
+		}
+
+		// Add the incoming label
+		if (outLabel != null) {
+			char c = (openBracket) ? ',' : '[';
+			openBracket = true;
+			stringB.append(c).append(">\"").append(outLabel.toString()).append('"');
+		}
+
+		if (openBracket) { stringB.append("] "); }
+
+		// Base case: no children
+		if (labels.isEmpty()) { return; }
+
+		// Recursion
+		stringB.append("-> {");
+
+		int i = labels.size();
+		for (LabelT l: labels) {
+			buildLatexRepresentation1(stringB, node, l, visited, loops);
+			--i;
+			char sep = (i > 0) ? ',' : '}';
+			stringB.append(sep);
+		}
+	}
+
+
+	/**
+	 * Build LaTex tree representation.
+	 * Second part of the helper function: the loops are printed.
+	 * NOTE: assuming the labels are not Latex special codes.
+	 * @param stringB The string representation, result is appended.
+	 * @param loops Arcs to print.
+	 * @see DFA#getLatexGraphRepresentation
+	 */
+	private void buildLatexRepresentation2(StringBuilder stringB,
+			Set<Pair<ANode<LabelT>, LabelT>> loops) {
+
+		stringB.append(",\n");
+
+		// Writing edges one by one.
+		for (Pair<ANode<LabelT>, LabelT> arc: loops) {
+			ANode<LabelT> node = arc.left;
+			LabelT l = arc.right;
+
+			// If this is a self loop
+			if (node.followArc(l) == node) {
+				stringB.append("\t\t").
+						append(node.getId()).
+						append(" -> [self loop] ").
+						append(node.getId()).
+						append(",\n");
+			}
+			// Else, we go to some previous node
+			else {
+				stringB.append("\t\t").
+						append(node.getId()).
+						append(" -> [backward] ").
+						append(node.followArc(l).getId()).
+						append(",\n");
+			}
+		}
+		stringB.delete(stringB.length()-2, stringB.length());
+	}
+
+
 	// >> Public functions
 	
 	/**
@@ -83,7 +201,6 @@ public class DFA<LabelT>
 	public DFA() {
 
 		// Initialize the fields
-		statesNum = 0;
 		initialState = newNode(); // Id: 1
 		failState.setDefault(failState); // Looping
 		failState.setFinalFlag(false); // Just to be sure
@@ -126,48 +243,49 @@ public class DFA<LabelT>
 
 
 	/**
+	 * Returns the body of a tikzpicture in Latex that represents this graph.
+	 * NOTE: just the reachable states are printed.
+	 * @return The string for this graph
+	 */
+	@Override
+	public String getLatexGraphRepresentation() {
+
+		// Data structures
+		StringBuilder stringB = new StringBuilder();
+		HashSet<ANode<LabelT>> visited = new HashSet<>();
+		Set<Pair<ANode<LabelT>,LabelT>> loops = new HashSet<>();
+
+		// Recursive call
+		buildLatexRepresentation1(stringB, null, null, visited, loops);
+
+		// Adding remaining edges
+		buildLatexRepresentation2(stringB, loops);
+
+		return stringB.toString();
+	}
+
+
+	/**
 	 * Debugging
 	 */
 	public static void test() {
 
-		// Testing ANode
-		//ANode.test();
-		
-		// Testing new arcs
+		// Define a graph
 		DFA<Character> dfa = new DFA<>();
-		ANode<Character> n1 = dfa.newChild(dfa.initialState, 'a');
-		ANode<Character> n2 = dfa.newChild(n1, 'b');
-		ANode<Character> n3 = dfa.newChild(n1, 'c');
-		dfa.newArc(n3, 'a', n1);
-		dfa.newArc(n3, 'g', n3);
+		ANode<Character> n2 = dfa.newChild(dfa.initialState, 'a');
+		ANode<Character> n3 = dfa.newChild(n2, 'b');
+		ANode<Character> n4 = dfa.newChild(n2, 'c');
+		dfa.newArc(n4, 'a', n2);
+		dfa.newArc(n4, 'g', n4);
 		n3.setFinalFlag(true);
 		dfa.initialState.setFinalFlag(true);
+		ANode<Character> n5 = dfa.newChild(n3, 'c');
+		n5.setFinalFlag(true);
+		dfa.newArc(n5,'f',dfa.initialState);
 
-		// Testing iterator
-		for (ANode<Character> n: dfa) {
-			System.out.println(n.toString() + " " + n.outArcs.toString());
-		}
-
-		// Strings to parse
-		String[] stringsToParse = {"", "a", "acacacac", "acgggggg", "ab", "d",
-				"nonsense"};
-
-		// Convert the sequences
-		List<List<Character>> sequencesToParse = new ArrayList<>();
-		for (int i = 0; i < stringsToParse.length; ++i) {
-			List<Character> seq = new ArrayList<>();
-			sequencesToParse.add(seq);
-			for (Character c: stringsToParse[i].toCharArray()) {
-				seq.add(c);
-			}
-		}
-
-		// Test parsing
-		Automaton<Character> automaton = dfa;
-		for (List<Character> sequence: sequencesToParse) {
-			System.out.print(sequence + "  ");
-			System.out.println(automaton.parseSequence(sequence));
-		}
+		// Test Latex
+		LatexPrintableGraph printableGraph = dfa;
+		LatexSaver.saveLatexFile(printableGraph, new File("latex/dfa.tex"), 1);
 	}
 
 
