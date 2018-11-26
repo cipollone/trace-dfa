@@ -1,10 +1,7 @@
-/* Clause class */
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+/* Class implementing propositional clauses */
 public class Clause {
 	
 	private int index;
@@ -63,22 +60,5 @@ public class Clause {
 		}
 		sb.append(")");
 		return sb.toString();
-	}
-
-	// @Override
-	// public equal(Object o) {
-	// 		if (o == null) {
- //          return false;
- //      }
-
- //      if (o == this) {
- //          return true;
- //      }
-
- //      if (!getClass().equals(o.getClass())) {
- //          return false;
- //      }
-
- //      return index == ((BinaryVariable) o).index;
-	// }	      
+	}	      
 }

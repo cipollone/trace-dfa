@@ -1,17 +1,10 @@
-/* Formula class */
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+/* Class implementing propositional formulas */
 public class Formula {
 	
 	private List<Clause> clauseList = new ArrayList<>();
-
-	public Formula() {
-
-	}
 
 	public void addClause(Clause c) {
 		clauseList.add(c);

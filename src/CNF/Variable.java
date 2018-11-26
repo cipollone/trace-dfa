@@ -1,5 +1,5 @@
-/* Variable class*/
 
+/* Class implementing binary variables */
 public class Variable {
 
 		private int index;
