@@ -15,7 +15,7 @@ public class Test	{
 	
 	public static void test() {
 
-		TraceManager tm = new TraceManager("log_OK.xes");
+		TraceManager tm = new TraceManager("traces/log_OK.xes");
 
 		// TraceManager tm1 = new TraceManager("log_BAD_1.xes");
 
@@ -35,6 +35,6 @@ public class Test	{
 		// tm3.addTracesToAPTA(tree);
 		// tm4.addTracesToAPTA(tree);
 
-		LatexSaver.saveLatexFile(tree, new File("tree.tex"), 2);
+		LatexSaver.saveLatexFile(tree, new File("latex/traces_apta.tex"), 2);
 	}
 }

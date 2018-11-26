@@ -1,5 +1,9 @@
 <project name="TraceDFA" default="run" basedir=".">
 
+	<!-- Settings -->
+	<property name="debugging" value="true"/>
+	<property name="doc-level" value="protected"/>
+
 	<!-- Names -->
 	<property name="src.dir" location="src"/>
 	<property name="build.dir" location="build"/>
@@ -8,10 +12,11 @@
 	<property name="main-class" value="Main"/>
 	<property name="jar-name" value="${ant.project.name}.jar"/>
 
-	<!-- Settings -->
-	<property name="debugging" value="true"/>
-	<property name="doc-level" value="protected"/>
-
+	<path id="libs.path">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
 
 	<!-- Targets -->
 
@@ -22,7 +27,9 @@
 
 	<target name="doc">
 		<javadoc sourcepath="${src.dir}" destdir="${doc.dir}"
-			access="${doc-level}"/>
+			access="${doc-level}">
+			<classpath refid="libs.path"/>
+		</javadoc>
 	</target>
 
 	<target name="compile">
@@ -30,27 +37,18 @@
 		<javac srcdir="${src.dir}" destdir="${build.dir}/classes"
 			includeantruntime="false" debug="${debugging}"
 			debuglevel="lines,vars,source">
-			<classpath>
-				<pathelement path="${classpath}"/>
-				<fileset dir="${lib.dir}">
-					<include name="**/*.jar"/>
-				</fileset>
-			</classpath>
+			<classpath refid="libs.path"/>
 			<compilerarg value="-Xlint"/>
 		</javac>
 	</target>
 
-	<target name="jar" depends="compile">
-		<mkdir dir="${build.dir}/jar"/>
-		<jar destfile="${build.dir}/jar/${jar-name}" basedir="build/classes">
-			<manifest>
-				<attribute name="Main-Class" value="${main-class}"/>
-			</manifest>
-		</jar>
-	</target>
-
-	<target name="run" depends="jar">
-		<java jar="build/jar/${jar-name}" fork="true"/>
+	<target name="run" depends="compile">
+		<java classname="Main">
+			<classpath>
+				<pathelement path="${build.dir}/classes"/>
+				<path refid="libs.path"/>
+			</classpath>
+		</java>
 	</target>
 
 </project>

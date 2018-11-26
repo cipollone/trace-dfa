@@ -3,6 +3,7 @@
 /lib/
 /doc/
 /latex/
+/traces/
 
 # Java
 *.class
