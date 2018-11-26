@@ -3,6 +3,10 @@
 /lib/
 /doc/
 /latex/
+/traces/
+
+# Java
+*.class
 
 # Vim
 *.swp

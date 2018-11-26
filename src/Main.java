@@ -1,13 +1,10 @@
 
-import automata.DFA;
-import automata.APTA;
-
+import tracemanager.Test;
 
 public class Main {
 	public static void main(String args[]) {
 
-		DFA.test();
-		APTA.test();
+		Test.test();
 
 	}
 }
