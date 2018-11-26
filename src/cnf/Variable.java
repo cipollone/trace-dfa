@@ -1,4 +1,6 @@
 
+package cnf;
+
 /* Class implementing binary variables */
 public class Variable {
 

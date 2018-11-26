@@ -1,12 +1,19 @@
+
+package tracemanager;
+
 import java.io.*;
 import java.util.*;
 
 import org.deckfour.xes.model.*;
 import org.deckfour.xes.in.*;
 
-public class Main	{
+import automata.APTA;
+import automata.LatexSaver;
+
+
+public class Test	{
 	
-	public static void main(String args[]) throws FileNotFoundException,IOException,Exception{
+	public static void test() {
 
 		TraceManager tm = new TraceManager("log_OK.xes");
 
@@ -28,6 +35,6 @@ public class Main	{
 		// tm3.addTracesToAPTA(tree);
 		// tm4.addTracesToAPTA(tree);
 
-		tree.saveLatexFile(new File("tree.tex"));
+		LatexSaver.saveLatexFile(tree, new File("tree.tex"), 2);
 	}
 }

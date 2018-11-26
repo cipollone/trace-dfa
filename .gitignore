@@ -1,5 +1,8 @@
 # Project
 /build/
+/lib/
+/doc/
+/latex/
 
 # Java
 *.class

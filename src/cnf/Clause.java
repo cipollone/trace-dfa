@@ -1,4 +1,6 @@
 
+package cnf;
+
 import java.util.*;
 
 /* Class implementing propositional clauses */

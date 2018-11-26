@@ -1,8 +1,14 @@
+
+package tracemanager;
+
 import java.io.*;
 import java.util.*;
 
 import org.deckfour.xes.model.*;
 import org.deckfour.xes.in.*;
+
+import automata.APTA;
+
 
 /* TraceManager class */
 public class TraceManager {
@@ -11,11 +17,11 @@ public class TraceManager {
 	
 	// >>> Constructors
 
-	public TraceManager(String pathname) throws FileNotFoundException {
+	public TraceManager(String pathname) {
 		this.file = new File(pathname);
 	}
 
-	public TraceManager(File file) throws FileNotFoundException {
+	public TraceManager(File file) {
 		this.file = file;
 	}
 
@@ -24,24 +30,29 @@ public class TraceManager {
 	/**
 	 * Set a new file to be read 
 	 */
-	public void setFile(String pathname) throws FileNotFoundException {
+	public void setFile(String pathname) {
 		this.file = new File(pathname);
 	}
 
 	/**
 	 * Set a new file to be read 
 	 */
-	public void setFile(File file) throws FileNotFoundException {
+	public void setFile(File file) {
 		this.file = file;
 	}
 
 	/**
 	 * Returns a list of all the logs on the file. In our case we have one log per file 
 	 */
-	public List<XLog> getLogs() throws Exception {
+	public List<XLog> getLogs() {
 		XesXmlParser parser = new XesXmlParser();
+		List<XLog> xLogs = null;
 
-		List<XLog> xLogs = parser.parse(file);
+		try {
+			xLogs = parser.parse(file);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return xLogs;
 	}
@@ -50,7 +61,7 @@ public class TraceManager {
 	 * Returns a list of all the traces in the logs of the file, 
 	 * each a list of labels (strings) 
 	 */
-	public List<List<String>> getTraces() throws Exception {
+	public List<List<String>> getTraces() {
 		List<XLog> xLogs = getLogs();
 		List<List<String>> traces = new ArrayList<>();
 
@@ -70,7 +81,7 @@ public class TraceManager {
 	/**
 	 * Extends the tree passed to accept or reject new traces
 	 */
-	public void addTracesToAPTA(APTA<String> tree) throws Exception {
+	public void addTracesToAPTA(APTA<String> tree) {
 		List<List<String>> traces = getTraces();
 
 		for (List<String> trace : traces) {
