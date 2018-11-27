@@ -270,6 +270,9 @@ public class DFA<LabelT>
 	 */
 	public static void test() {
 
+		// Test ANode
+		DFA.ANode.test();
+
 		// Define a graph
 		DFA<Character> dfa = new DFA<>();
 		ANode<Character> n2 = dfa.newChild(dfa.initialState, 'a');

@@ -240,6 +240,7 @@ public class APTA<LabelT>
 	 */
 	public static void test() {
 
+		// Test TNode
 		TNode.test();
 
 		// Build a tree
