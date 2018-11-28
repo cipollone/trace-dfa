@@ -9,50 +9,61 @@ import java.io.File;
  * Class for the Augmented Prefix Tree Acceptor (a tree).
  * Each transition is corresponds to a label of type LabelT.
  */
-public class APTA<LabelT>
-		implements Iterable<APTA.TNode<LabelT>>, Automaton<LabelT>, 
-			LatexPrintableGraph {
-
-	// >>> Fields
-	
-	/* The root */
-	private final TNode<LabelT> root = new TNode<LabelT>(0);
-
-	/* Sets and counters */
-	private int nodesNum = 1;    // The root is the initial node
-
+public class APTA<LabelT> 
+		extends AbstractGraph<LabelT>
+		implements Automaton<LabelT>, LatexPrintableGraph {
 
 	// >>> Private functions
+
+	/**
+	 * Returns a new node to be added to the graph.
+	 * This is an important override.
+	 * @param id the id
+	 * @return A new ANode
+	 */
+	@Override
+	protected ANode<LabelT> newNode(int id) {
+		return new ANode<LabelT>(id);
+	}
 	
 	/**
-	 * Returns a new node to be added to the tree.
-	 * This should be the only function used to add new nodes.
-	 * The returned node is not connected to the graph.
-	 * @return A new TNode with a new id
+	 * Extends this APTA with this sequence and sets the final response.
+	 * If the final response is UNKNOWN, the sequence is discarded.
+	 * Sequences are parsed from the root of the tree.
+	 * @param sequence A list of labels
+	 * @param response The response associated to the string
+	 * @return true if the sequence was added, false otherwise.
 	 */
-	private TNode<LabelT> newNode() {
-		return new TNode<LabelT>(nodesNum++);
-	}
-
-
-	/**
-	 * Creates a new child of parent, connected with arc label.
-	 * @param parent The parent of the new node
-	 * @param label The label of the new arc
-	 * @return The created and attached node
-	 * @see TNode#addArc
-	 */
-	private TNode<LabelT> newChild(TNode<LabelT> parent, LabelT label) {
+	private boolean addSequence(List<LabelT> sequence, Response response) {
 
 		// Checks
-		if (parent == null || label == null) {
+		if (sequence == null || response == null) {
 			throw new IllegalArgumentException("Null argument");
 		}
+		if (response == Response.UNKNOWN) {
+			return false; // Nothing to do
+		}
 
-		// Create
-		TNode<LabelT> child = newNode();
-		parent.addArc(label, child);
-		return child;
+		// Parse the sequence with the tree
+		Node<LabelT> node = firstNode;
+		int i;
+		for (i = 0; i < sequence.size(); ++i) {
+			Node<LabelT> nextNode = node.followArc(sequence.get(i));
+			if (nextNode == null) { // If there is no such arc
+				break;
+			}
+			node = nextNode; // continue
+		}
+
+		// Extend the tree with the remaining sequence
+		for (; i < sequence.size(); ++i) {
+			node = newChild(node, sequence.get(i));
+		}
+
+		// Set the final state
+		((ANode<LabelT>)node).setResponse(response);
+
+		return true;
 	}
 
 
@@ -66,16 +77,17 @@ public class APTA<LabelT>
 	 * @see APTA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation(StringBuilder stringB,
-			TNode<LabelT> node) {
+			Node<LabelT> node) {
 
 		stringB.append("\n\t\t");
 
 		// Add the node id
-		stringB.append(node.getId()).append(' ');
+		stringB.append(node.id).append(' ');
 
 		// Add the response
 		boolean nodeOption = true;
-		switch (node.getResponse()) {
+		ANode<LabelT> aNode = (ANode<LabelT>) node;
+		switch (aNode.getResponse()) {
 			case ACCEPT:
 				stringB.append("[accept] ");
 				break;
@@ -87,7 +99,7 @@ public class APTA<LabelT>
 		}
 		
 		// If it has a parent (i.e. not the root), add the incoming label
-		LabelT parentLabel = node.getParentLabel();
+		LabelT parentLabel = aNode.getParentLabel();
 		if (parentLabel != null) {
 			if (nodeOption) {
 				stringB.delete(stringB.length()-2, stringB.length()).append(',');
@@ -113,91 +125,42 @@ public class APTA<LabelT>
 	}
 
 
-	/**
-	 * Extends this APTA with this sequence and sets the final response.
-	 * If the final response is UNKNOWN, the sequence is discarded.
-	 * Sequences are parsed from the root of the tree.
-	 * @param sequence A list of labels
-	 * @param response The response associated to the string
-	 * @return true if the sequence was added, false otherwise.
-	 */
-	private boolean addSequence(List<LabelT> sequence, Response response) {
-
-		// Checks
-		if (sequence == null) {
-			throw new IllegalArgumentException("Null sequence");
-		}
-		if (response == Response.UNKNOWN) {
-			return false; // Nothing to do
-		}
-
-		// Parse the sequence with the tree
-		TNode<LabelT> node = root;
-		int i;
-		for (i = 0; i < sequence.size(); ++i) {
-			TNode<LabelT> nextNode = node.followArc(sequence.get(i));
-			if (nextNode == null) { // If there is no such arc
-				break;
-			}
-			node = nextNode; // continue
-		}
-
-		// Extend the tree with the remaining sequence
-		for (; i < sequence.size(); ++i) {
-			node = newChild(node, sequence.get(i));
-		}
-
-		// Set the final state
-		node.setResponse(response);
-
-		return true;
-	}
-
-
 	// >>> Public functions
-	
+
 	/**
-	 * Return a new iterator.
-	 * Iterates the nodes with DepthPreIterator, a depth first visit.
-	 * @return A new DepthPreIterator
+	 * Returns the body of a tikzpicture in Latex that represents this graph.
+	 * @return The string for this graph
 	 */
 	@Override
-	public Iterator<TNode<LabelT>> iterator() {
-		return new DepthPreIterator();
+	public String getLatexGraphRepresentation() {
+		StringBuilder stringB = new StringBuilder();
+		buildLatexRepresentation(stringB, firstNode);
+		return stringB.toString();
 	}
 
 
 	/**
 	 * Parse the sequence with this tree.
-	 * The tree is not modified.
 	 * @param sequence A list of labels
 	 * @return The result of parsing
 	 */
 	public Response parseSequenceAPTA(List<LabelT> sequence) {
 
-		// Check
-		if (sequence == null) {
-			throw new IllegalArgumentException("Null sequence");
-		}
-
 		// Traverse the tree
-		TNode<LabelT> node = root;
-		for (LabelT label: sequence) {
-			node = node.followArc(label);
-			if (node == null) {
-				return Response.UNKNOWN; // Not expected
-			}
-		}
+		Node<LabelT> node = followPath(sequence);
 
-		return node.getResponse();
+		// Return the response of the final node
+		if (node == null) {
+			return Response.UNKNOWN;
+		}
+		return ((ANode<LabelT>)node).getResponse();
 	}
 
 
 	/**
-	 * Parse the sequence with binary output.
-	 * Positive just for ACCEPT responses.
+	 * Returns true for accepted sequences, false otherwise.
 	 * @param sequence A list of labels
-	 * @return true if the sequence is accepted, false otherwise
+	 * @return Result of parsing
 	 */
 	@Override
 	public boolean parseSequence(List<LabelT> sequence) {
@@ -208,30 +171,22 @@ public class APTA<LabelT>
 	/**
 	 * Extends this APTA to accept this sequence.
 	 * @param sequence A list of labels
+	 * @return This APTA
 	 */
-	public void acceptSequence(List<LabelT> sequence) {
+	public APTA<LabelT> acceptSequence(List<LabelT> sequence) {
 		addSequence(sequence, Response.ACCEPT);
+		return this;
 	}
 
 
 	/**
 	 * Extends this APTA to reject this sequence
 	 * @param sequence A list of labels
+	 * @return This APTA
 	 */
-	public void rejectSequence(List<LabelT> sequence) {
+	public APTA<LabelT> rejectSequence(List<LabelT> sequence) {
 		addSequence(sequence, Response.REJECT);
-	}
-
-
-	/**
-	 * Returns the body of a tikzpicture in Latex that represents this graph.
-	 * @return The string for this graph
-	 */
-	@Override
-	public String getLatexGraphRepresentation() {
-		StringBuilder stringB = new StringBuilder();
-		buildLatexRepresentation(stringB, root);
-		return stringB.toString();
+		return this;
 	}
 
 
@@ -239,8 +194,10 @@ public class APTA<LabelT>
 	 * Debugging
 	 */
 	public static void test() {
+		
+		ANode.test();
 
-		TNode.test();
+		System.out.println("Testing APTA");
 
 		// Build a tree
 		APTA<Character> tree = new APTA<Character>();
@@ -282,15 +239,14 @@ public class APTA<LabelT>
 		}
 
 		// Changing a node
-		tree.root.followArc('c').setResponse(Response.REJECT);
+		((ANode<Character>) tree.firstNode.followArc('c'))
+				.setResponse(Response.REJECT);
 
 		// Test parsing
-		System.out.println("APTA");
 		for (List<Character> sequence: sequencesToParse) {
 			System.out.print(sequence + "  ");
 			System.out.println(tree.parseSequenceAPTA(sequence));
 		}
-		System.out.println();
 
 		// Testing Automaton interface
 		System.out.println("Automaton");
@@ -299,20 +255,20 @@ public class APTA<LabelT>
 			System.out.print(sequence + "  ");
 			System.out.println(automaton.parseSequence(sequence));
 		}
-		System.out.println();
 
 		// Testing LatexSaver class and LatexPrintableGraph interface
 		LatexPrintableGraph printableGraph = tree;
 		LatexSaver.saveLatexFile(printableGraph, new File("latex/apta.tex"), 1);
 
+		System.out.println();
 	}
 
 
 	// >>> Nested classes
 
 	/**
-	 * Enum class for the response in the current state.
-	 * accepting, rejecting, or unknown
+	 * Enum class for the response in the each state.
+	 * Possible choices: accepting, rejecting, or unknown response.
 	 */
 	public enum Response {
 		ACCEPT, REJECT, UNKNOWN
@@ -320,147 +276,45 @@ public class APTA<LabelT>
 
 
 	/**
-	 * Iterator class for depth-first visit of the tree.
-	 * Nodes are returned in pre-order.
-	 */
-	private class DepthPreIterator implements Iterator<TNode<LabelT>> {
-		
-		/* Stack of remaining nodes */
-		private Stack<TNode<LabelT>> nodesLeft = new Stack<TNode<LabelT>>();
-
-
-		/* Constructor */
-		public DepthPreIterator() {
-			nodesLeft.add(root); // Next is the root
-		}
-
-		
-		@Override
-		public boolean hasNext() {
-			return !nodesLeft.empty();
-		}
-
-
-		@Override
-		public TNode<LabelT> next() {
-
-			// Termination
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			}
-
-			// Expand the next node
-			TNode<LabelT> node = nodesLeft.pop();
-			Set<LabelT> labels = node.getLabels();
-			for (LabelT l: labels) {
-				nodesLeft.push(node.followArc(l));
-			}
-
-			// Return expanded
-			return node;
-		}
-	}
-
-
-	/**
 	 * Class for each node of the Augmented Prefix Tree Acceptor (a tree).
 	 * Each node can be accepting, rejecting or unknown.
-	 * Labels in outgoing edges are exclusive (determinism).
 	 */
-	protected static class TNode<LabelT> {
+	protected static class ANode<LabelT> 
+			extends Node<LabelT> {
 
 		// >>> Fields
-
-		/* Identifier */
-		private final int id;
 
 		/* Each state is labelled with a Response */
 		private Response response = Response.UNKNOWN;
 
-		/* Tree structure: labelled arcs */
-		private Map<LabelT, TNode<LabelT>> arcs = new HashMap<LabelT, TNode<LabelT>>();
-
 		/* Connection with the parent */
-		private TNode<LabelT> parent;
-		private LabelT parentLabel;
+		private ANode<LabelT> parent = null;
+		private LabelT parentLabel = null;
 
 
-		// >>> Private functions
+		// >> Private functions
 
 		/**
-		 * Set the connection with the parent
+		 * Set the connection with the parent.
+		 * Use null values to unset.
 		 * @param parent The parent node
 		 * @param parentLabel The label of the arc
+		 * @return This node
 		 */
-		private void setParent(TNode<LabelT> parent, LabelT parentLabel) {
+		private ANode<LabelT> setParent(ANode<LabelT> parent, LabelT parentLabel) {
 			this.parent = parent;
 			this.parentLabel = parentLabel;
-		}
-
-
-		/**
-		 * Remove parent pointer
-		 */
-		private void unsetParent() {
-			this.parent = null;
-			this.parentLabel = null;
+			return this;
 		}
 
 
 		// >>> Public functions
 
 		/**
-		 * Constructor: just set an id
-		 * @param id Any identifier
-		 */
-		public TNode(int id) {
-			this.id = id;
-		}
-
-
-		/**
-		 * Constructor: id and response
-		 * @param id Any identifier
-		 * @param response Whether the state should accept, reject or not specified
-		 */
-		public TNode(int id, Response response) {
-			this(id);
-			this.response = response;
-		}
-
-
-		/**
-		 * Get the id
-		 * @return The numeric id
-		 */
-		public int getId() {
-			return this.id;
-		}
-
-
-		/**
-		 * Set the response variable
-		 * @param response Reject, accept or unknown
-		 */
-		public void setResponse(Response response) {
-			this.response = response;
-		}
-
-
-		/**
-		 * Returns the response
-		 * @return The response at the current node
-		 */
-		public Response getResponse() {
-			return this.response;
-		}
-
-
-		/**
 		 * Returns the parent node
 		 * @return The parent field
 		 */
-		public TNode<LabelT> getParent() {
+		public ANode<LabelT> getParent() {
 			return this.parent;
 		}
 
@@ -475,22 +329,65 @@ public class APTA<LabelT>
 
 
 		/**
-		 * Returns the node connected to the current node through the arc
-		 * labelled as label.
-		 * @param label The label of the arc
-		 * @return Connected node, or null if there was no such arc.
+		 * Constructor: just set an id
+		 * @param id Any identifier
 		 */
-		public TNode<LabelT> followArc(LabelT label) {
-			return arcs.get(label);
+		public ANode(int id) {
+			super(id);
 		}
 
 
 		/**
-		 * Returns the set of labels available from this node
-		 * @return A set of labels
+		 * Constructor: id and response
+		 * @param id Any identifier
+		 * @param response Whether the state should accept, reject or unknown
 		 */
-		public Set<LabelT> getLabels() {
-			return arcs.keySet();
+		public ANode(int id, Response response) {
+			super(id);
+			this.response = response;
+		}
+
+
+		/**
+		 * Set the response variable
+		 * @param response Reject, accept or unknown
+		 * @return This node
+		 */
+		public ANode<LabelT> setResponse(Response response) {
+			this.response = response;
+			return this;
+		}
+
+
+		/**
+		 * Returns the response
+		 * @return The response at the current node
+		 */
+		public Response getResponse() {
+			return this.response;
+		}
+
+
+		/**
+		 * Add an arc from the current node.
+		 * If a connection with the same label already exists, that connection is
+		 * substituted with the new one. The parent field of node is also set.
+		 * @param label Label of the new connection
+		 * @param node The target node
+		 * @return this node
+		 */
+		@Override
+		public ANode<LabelT> addArc(LabelT label, Node<LabelT> node) {
+
+			// Allow connections just from classes of the same type
+			if (!(node instanceof ANode)) {
+				throw new IllegalArgumentException(
+						"Can't connect toghether ANode and Node");
+			}
+			super.addArc(label, node);
+			((ANode<LabelT>)node).setParent(this, label);
+
+			return this;
 		}
 
 
@@ -500,44 +397,23 @@ public class APTA<LabelT>
 		 * @param label The label of the arc to remove.
 		 * @return The connected node or null if there was no edge.
 		 */
-		public TNode<LabelT> removeArc(LabelT label) {
+		@Override
+		public ANode<LabelT> removeArc(LabelT label) {
 			
-			TNode<LabelT> oldNode = arcs.remove(label);
+			Node<LabelT> oldNode = super.removeArc(label);
+			ANode<LabelT> oldNodeA = null;
 
 			if (oldNode != null) {    // Such arc existed
-				oldNode.unsetParent();
+				oldNodeA = (ANode<LabelT>)oldNode;
+				oldNodeA.setParent(null, null);
 			}
-			return oldNode;
-		}
-
-
-		/**
-		 * Add an arc from the current node.
-		 * The connection should be and must not create loops. This is not checked.
-		 * If a connection with the same label already exists, that connection is
-		 * substituted with the new one. The parent field of node is also set.
-		 * @param label Label of the new connection
-		 * @param node The target node
-		 */
-		public void addArc(LabelT label, TNode<LabelT> node) {
-
-			// Checks
-			if (label == null || node == null) {
-				throw new IllegalArgumentException("Null argument");
-			}
-
-			// Remove the old connection if it exists
-			removeArc(label);
-
-			// Save the new connection
-			arcs.put(label, node);
-			node.setParent(this, label);
+			return oldNodeA;
 		}
 
 
 		@Override
 		public String toString() {
-			return id + ":" + response.toString();
+			return id + "_" + response.toString();
 		}
 
 
@@ -546,12 +422,12 @@ public class APTA<LabelT>
 		 */
 		public static void test() {
 
-			System.out.println("TNode");
+			System.out.println("Testing APTA.Node");
 
-			TNode<Character> n = new TNode<Character>(0);
-			TNode<Character> n1 = new TNode<Character>(1, Response.ACCEPT);
-			TNode<Character> n2 = new TNode<Character>(2);
-			TNode<Character> n3 = new TNode<Character>(3, Response.REJECT);
+			ANode<Character> n = new ANode<Character>(0);
+			ANode<Character> n1 = new ANode<Character>(1, Response.ACCEPT);
+			ANode<Character> n2 = new ANode<Character>(2);
+			ANode<Character> n3 = new ANode<Character>(3, Response.REJECT);
 
 			n.addArc('a', n1);
 			n.addArc('b', n2);

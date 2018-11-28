@@ -56,7 +56,7 @@ public final class LatexSaver {
 			"			grow right sep=1.0cm,\n" +
 			"			branch down sep=0.6cm,\n" +
 			"			nodes={draw,circle},\n" +
-			"			edge quotes={auto, font={\\scriptsize}}\n" +
+			"			edge quotes={font={\\scriptsize}, inner sep=0.3ex, auto, midway}\n" +
 			"			]{\n" +
 			"% >> end of part1\n";
 		String latexFilePart2 = 
