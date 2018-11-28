@@ -9,78 +9,27 @@ import util.Pair;
 
 /**
  * Deterministic Finite-States Automaton class.
- * Each transition is corresponds to a label of type LabelT.
- * NOTE: destructive modifications are not allowed.
- *
- * TODO: modifications are not allowed yet; we need to be careful with
- * IDs and unique node references.
+ * Each transition has a label of type LabelT.
  */
 public class DFA<LabelT>
-		implements Iterable<DFA.ANode<LabelT>>, Automaton<LabelT>,
-			LatexPrintableGraph {
-
+		extends AbstractGraph<LabelT>
+		implements Automaton<LabelT>, LatexPrintableGraph {
+	
 	// >>> Fields
-	
-	/* The inital state */
-	private final ANode<LabelT> initialState;
 
-	/* A fail state for inexistent transitions */
-	private final ANode<LabelT> failState = new ANode<>(0);
-
-	/* Counter */
-	private int statesNum = 1; // Just the failState
-
-
-	// >> Private functions
+	// >>> Private functions
 	
 	/**
-	 * Returns a new state to be added to the tree.
-	 * This should be the only function used to add new states.
-	 * The returned node is not connected to the graph.
-	 * @return A new ANode with a new id
+	 * Returns a new node to be added to the graph.
+	 * This is an important override.
+	 * @param id the id
+	 * @return A new DNode
 	 */
-	private ANode<LabelT> newNode() {
-		ANode<LabelT> node = new ANode<>(statesNum++);
-		node.setDefault(failState);
-		return node;
+	@Override
+	protected DNode<LabelT> newNode(int id) {
+		return new DNode<LabelT>(id);
 	}
-
-
-	/**
-	 * Creates a new connection in the DFA.
-	 * @param parent The parent
-	 * @param label The label of the connection
-	 * @param child The child 
-	 */
-	private void newArc(ANode<LabelT> parent, LabelT label, ANode<LabelT> child) {
-
-		// Checks
-		if (parent == null || child == null || label == null) {
-			throw new IllegalArgumentException("Null argument");
-		}
-		if (parent.hasArc(label)) {
-			throw new IllegalArgumentException(
-					"Label " + label + " already exists from node " + parent);
-		}
-
-		// Connect
-		parent.addArc(label, child);
-	}
-
-
-	/**
-	 * Creates a new child of parent, connected with arc label.
-	 * @param parent The parent of the new node
-	 * @param label The label of the new arc
-	 * @return The created and attached node
-	 */
-	private ANode<LabelT> newChild(ANode<LabelT> parent, LabelT label) {
-
-		ANode<LabelT> child = newNode();
-		newArc(parent, label, child);
-		return child;
-	}
-
+	
 
 	/**
 	 * Build LaTex tree representation.
@@ -95,22 +44,22 @@ public class DFA<LabelT>
 	 * @see DFA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation1(StringBuilder stringB,
-			ANode<LabelT> parent, LabelT outLabel, Set<ANode<LabelT>> visited,
-			Set<Pair<ANode<LabelT>, LabelT>> loops) {
+			Node<LabelT> parent, LabelT outLabel, Set<Node<LabelT>> visited,
+			Set<Pair<Node<LabelT>, LabelT>> loops) {
 
 		stringB.append("\n\t\t");
 
 		// Get the current node
-		ANode<LabelT> node;
+		Node<LabelT> node;
 		if (parent != null) {
 			node = parent.followArc(outLabel);
 		} else {
-			node = initialState;
+			node = firstNode;
 		}
 
 		// If this is already drawn, save for later
 		if (visited.contains(node)) {
-			Pair<ANode<LabelT>, LabelT> arc = new Pair<>(parent, outLabel);
+			Pair<Node<LabelT>, LabelT> arc = new Pair<>(parent, outLabel);
 			loops.add(arc);
 			return;
 		}
@@ -120,11 +69,11 @@ public class DFA<LabelT>
 		Set<LabelT> labels = node.getLabels();
 
 		// Add the node id
-		stringB.append(node.getId()).append(' ');
+		stringB.append(node.id).append(' ');
 
 		// Add final, if that is the case
 		boolean openBracket = false;
-		if (node.getFinalFlag()) {
+		if (((DNode<LabelT>) node).getFinalFlag()) {
 			stringB.append("[accept");
 			openBracket = true;
 		}
@@ -163,29 +112,29 @@ public class DFA<LabelT>
 	 * @see DFA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation2(StringBuilder stringB,
-			Set<Pair<ANode<LabelT>, LabelT>> loops) {
+			Set<Pair<Node<LabelT>, LabelT>> loops) {
 
 		stringB.append(",\n");
 
 		// Writing edges one by one.
-		for (Pair<ANode<LabelT>, LabelT> arc: loops) {
-			ANode<LabelT> node = arc.left;
+		for (Pair<Node<LabelT>, LabelT> arc: loops) {
+			Node<LabelT> node = arc.left;
 			LabelT l = arc.right;
 
 			// If this is a self loop
 			if (node.followArc(l) == node) {
 				stringB.append("\t\t").
-						append(node.getId()).
+						append(node.id).
 						append(" -> [self loop] ").
-						append(node.getId()).
+						append(node.id).
 						append(",\n");
 			}
 			// Else, we go to some previous node
 			else {
 				stringB.append("\t\t").
-						append(node.getId()).
+						append(node.id).
 						append(" -> [backward] ").
-						append(node.followArc(l).getId()).
+						append(node.followArc(l).id).
 						append(",\n");
 			}
 		}
@@ -193,52 +142,24 @@ public class DFA<LabelT>
 	}
 
 
-	// >> Public functions
+	// >>> Public functions
 	
-	/**
-	 * Constructor.
-	 */
-	public DFA() {
-
-		// Initialize the fields
-		initialState = newNode(); // Id: 1
-		failState.setDefault(failState); // Looping
-		failState.setFinalFlag(false); // Just to be sure
-	}
-
-	
-	/**
-	 * Return a new iterator.
-	 * Iterates the nodes with DepthPreIterator, a depth first visit.
-	 * @return A new DepthPreIterator
-	 */
-	@Override
-	public Iterator<ANode<LabelT>> iterator() {
-		return new DepthPreIterator();
-	}
-
-
 	/**
 	 * Parse this sequence and return the result.
-	 * If the sequence has some not recognized labels, false is returned.
+	 * If the sequence has some nonexistent transitions, false is returned.
 	 * @param sequence A list of labels
 	 * @return true if the sequence is accepted, false otherwise
 	 */
 	@Override
 	public boolean parseSequence(List<LabelT> sequence) {
 
-		// Check
-		if (sequence == null) {
-			throw new IllegalArgumentException("Null sequence");
-		}
-
 		// Traverse the automaton
-		ANode<LabelT> node = initialState;
-		for (LabelT label: sequence) {
-			node = node.followArc(label);
-		}
+		Node<LabelT> node = followPath(sequence);
 
-		return node.getFinalFlag();
+		if (node == null) {
+			return false;
+		}
+		return ((DNode<LabelT>) node).getFinalFlag();
 	}
 
 
@@ -252,8 +173,8 @@ public class DFA<LabelT>
 
 		// Data structures
 		StringBuilder stringB = new StringBuilder();
-		HashSet<ANode<LabelT>> visited = new HashSet<>();
-		Set<Pair<ANode<LabelT>,LabelT>> loops = new HashSet<>();
+		HashSet<Node<LabelT>> visited = new HashSet<>();
+		Set<Pair<Node<LabelT>,LabelT>> loops = new HashSet<>();
 
 		// Recursive call
 		buildLatexRepresentation1(stringB, null, null, visited, loops);
@@ -269,107 +190,59 @@ public class DFA<LabelT>
 	 * Debugging
 	 */
 	public static void test() {
+		
+		DNode.test();
 
-		// Test ANode
-		DFA.ANode.test();
-
+		System.out.println("Testing DFA");
+		
 		// Define a graph
 		DFA<Character> dfa = new DFA<>();
-		ANode<Character> n2 = dfa.newChild(dfa.initialState, 'a');
-		ANode<Character> n3 = dfa.newChild(n2, 'b');
-		ANode<Character> n4 = dfa.newChild(n2, 'c');
-		dfa.newArc(n4, 'a', n2);
-		dfa.newArc(n4, 'g', n4);
-		n3.setFinalFlag(true);
-		dfa.initialState.setFinalFlag(true);
-		ANode<Character> n5 = dfa.newChild(n3, 'c');
-		n5.setFinalFlag(true);
-		dfa.newArc(n5,'f',dfa.initialState);
+		DNode<Character> n1 = (DNode<Character>)dfa.newChild(dfa.firstNode, 'a');
+		DNode<Character> n2 = (DNode<Character>)dfa.newChild(n1, 'b');
+		DNode<Character> n3 = (DNode<Character>)dfa.newChild(n1, 'c');
+		n3.addArc('a', n1);
+		n3.addArc('g', n3);
+		n2.setFinalFlag(true);
+		((DNode<Character>)dfa.firstNode).setFinalFlag(true);
+		DNode<Character> n4 = (DNode<Character>)dfa.newChild(n2, 'c');
+		n4.setFinalFlag(true);
+
+		// Test parsing
+		List<Character> l;
+		l = new ArrayList<Character>();
+		System.out.println(dfa.parseSequence(l));
+		l = Arrays.asList('a','c');
+		System.out.println(dfa.parseSequence(l));
+		l = Arrays.asList('a','h');
+		System.out.println(dfa.parseSequence(l));
+		l = Arrays.asList('a','c','a','b');
+		System.out.println(dfa.parseSequence(l));
+
 
 		// Test Latex
 		LatexPrintableGraph printableGraph = dfa;
 		LatexSaver.saveLatexFile(printableGraph, new File("latex/dfa.tex"), 1);
+
+		// NOTE: we needed all these downcasts just because DFA still lacks a
+		// public API
+
+		System.out.println();
 	}
 
 
 	// >>> Nested classes
-	
-	/**
-	 * Iterator class for depth-first visit of the graph.
-	 * Nodes are returned in pre-order.
-	 */
-	private class DepthPreIterator implements Iterator<ANode<LabelT>> {
-
-		/* Stack of remaining nodes */
-		private Stack<ANode<LabelT>> nodesLeft = new Stack<>();
-
-		/* Set of visited states */
-		private Set<ANode<LabelT>> visited = new HashSet<>();
-
-		
-		/* Constructor */
-		public DepthPreIterator() {
-			nodesLeft.add(initialState);
-			nodesLeft.add(failState);
-		}
-
-
-		@Override
-		public boolean hasNext() {
-			return !(visited.size() == statesNum);
-		}
-
-
-		@Override
-		public ANode<LabelT> next() {
-
-			// Termination
-			if (!hasNext()) {
-				throw new NoSuchElementException();
-			}
-
-			// Find a new node
-			ANode<LabelT> node;
-			do {
-				node = nodesLeft.pop();
-			} while (visited.contains(node));
-			visited.add(node);
-
-			// Expand
-			Set<LabelT> labels = node.getLabels();
-			for (LabelT l: labels) {
-				ANode<LabelT> n = node.followArc(l);
-				if (!visited.contains(n)) {
-					nodesLeft.push(n);
-				}
-			}
-
-			// Return expanded
-			return node;
-		}
-	}
-
 
 	/**
 	 * Class for each node of the DFA.
 	 * Each node can be final (i.e. accepting), or not.
-	 * Labels in outgoing edges are exclusive (determinism).
 	 */
-	protected static class ANode<LabelT> {
+	protected static class DNode<LabelT> 
+			extends Node<LabelT> {
 
 		// >>> Fields
 		
-		/* Identifier */
-		private final int id;
-
 		/* Each state can be final or not */
-		private boolean finalState = false;
-
-		/* Graph structure: labelled arcs */
-		private Map<LabelT, ANode<LabelT>> outArcs = new HashMap<>();
-
-		/* Default arc */
-		private ANode<LabelT> defaultOutArc = null;
+		private boolean isFinal = false;
 
 
 		// >>> Public functions
@@ -378,8 +251,8 @@ public class DFA<LabelT>
 		 * Constructor: just set the id
 		 * @param id Any identifier
 		 */
-		public ANode(int id) {
-			this.id = id;
+		public DNode(int id) {
+			super(id);
 		}
 
 
@@ -388,27 +261,20 @@ public class DFA<LabelT>
 		 * @param id Any identifier
 		 * @param isFinal Whether this is a final state
 		 */
-		public ANode(int id, boolean isFinal) {
-			this(id);
-			this.finalState = isFinal;
-		}
-
-
-		/**
-		 * Get the id
-		 * @return The numeric id
-		 */
-		public int getId() {
-			return this.id;
+		public DNode(int id, boolean isFinal) {
+			super(id);
+			this.isFinal = isFinal;
 		}
 
 
 		/**
 		 * Set if this state is accepting or not.
 		 * @param isFinal
+		 * @return This node
 		 */
-		public void setFinalFlag(boolean isFinal) {
-			this.finalState = isFinal;
+		public DNode<LabelT> setFinalFlag(boolean isFinal) {
+			this.isFinal = isFinal;
+			return this;
 		}
 
 
@@ -416,87 +282,8 @@ public class DFA<LabelT>
 		 * Returns whether this is a final state
 		 */
 		public boolean getFinalFlag() {
-			return this.finalState;
+			return this.isFinal;
 		}
-
-
-		/**
-		 * Sets the default arc.
-		 * This is the default outward connection for labels with no arc
-		 * associated. Without a default arc, following an inexistent edge raises
-		 * an exception.
-		 * @param defaultOutArc A node, or null to unset.
-		 */
-		public void setDefault(ANode<LabelT> defaultOutArc) {
-			this.defaultOutArc = defaultOutArc;
-		}
-
-
-		/**
-		 * Returns whether label exists from the current node.
-		 * @param label The label to check
-		 */
-		public boolean hasArc(LabelT label) {
-			return outArcs.containsKey(label);
-		}
-
-
-		/**
-		 * Returns the node connected to the current node through the arc
-		 * labelled as label.
-		 * Following an non existend edge leads to the defaultOutArc (if it exists)
-		 * or raise an exception.
-		 * @param label The label of the arc
-		 * @return Connected node
-		 */
-		public ANode<LabelT> followArc(LabelT label) {
-
-			// Normal case
-			ANode<LabelT> node = outArcs.get(label);
-			if (node != null) { return node; }
-
-			// Inexistent edge
-			if (defaultOutArc != null) { return defaultOutArc; }
-			throw new IllegalArgumentException(
-					"Arc " + label + " do not exists from node " + toString());
-		}
-
-
-		/**
-		 * Returns the set of labels available from this node
-		 * @return A set of labels
-		 */
-		public Set<LabelT> getLabels() {
-			return outArcs.keySet();
-		}
-
-
-		/**
-		 * Remove an arc from the current node.
-		 * @param label The label of the arc to remove.
-		 * @return The connected node or null if there was no edge.
-		 */
-		public ANode<LabelT> removeArc(LabelT label) {
-			return outArcs.remove(label);
-		}
-
-
-		/**
-		 * Add an arc from the current node.
-		 * If a connection with the same label already exists, that connection is
-		 * substituted with the new one.
-		 * @param label Label of the new connection
-		 * @param node The target node
-		 */
-		public void addArc(LabelT label, ANode<LabelT> node) {
-
-			// Checks
-			if (label == null || node == null) {
-				throw new IllegalArgumentException("Null argument");
-			}
-
-			outArcs.put(label, node);
-		} 
 
 
 		/**
@@ -505,8 +292,8 @@ public class DFA<LabelT>
 		 */
 		@Override
 		public String toString() {
-			if (finalState) {
-				return Integer.toString(id) + "_Final";
+			if (isFinal) {
+				return id + "_Final";
 			} else {
 				return Integer.toString(id);
 			}
@@ -518,11 +305,12 @@ public class DFA<LabelT>
 		 */
 		public static void test() {
 
+			System.out.println("Testing DFA.DNode");
+
 			// Testing basic methods
-			System.out.println("ANode");
-			ANode<Character> n1 = new ANode<>(1, true);
-			ANode<Character> n2 = new ANode<>(2);
-			ANode<Character> n3 = new ANode<>(3, true);
+			DNode<Character> n1 = new DNode<>(1, true);
+			DNode<Character> n2 = new DNode<>(2);
+			DNode<Character> n3 = new DNode<>(3, true);
 
 			n1.addArc('a', n2);
 			n2.addArc('b', n3);
@@ -534,16 +322,11 @@ public class DFA<LabelT>
 
 			System.out.println(n1.followArc('a').followArc('c')); // 2
 
-			n1.setDefault(n3);
-			System.out.println(n1.followArc('g')); // 3
-
 			n2.removeArc('h');
 			n2.removeArc('c');
-			try {
-				n1.followArc('a').followArc('c'); // exception
-			} catch (IllegalArgumentException e) {
-				System.out.println("Caught: " + e.getMessage());
-			}
+			System.out.println(n1.followArc('a').followArc('c')); // null
+			
+			System.out.println();
 		}
 	}
 }
