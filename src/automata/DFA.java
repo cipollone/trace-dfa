@@ -12,7 +12,7 @@ import util.Pair;
  * Each transition has a label of type LabelT.
  */
 public class DFA<LabelT>
-		extends AbstractGraph<LabelT>
+		extends AbstractGraph<LabelT, DFA.DNode<LabelT>>
 		implements Automaton<LabelT>, LatexPrintableGraph {
 	
 	// >>> Fields
@@ -44,13 +44,13 @@ public class DFA<LabelT>
 	 * @see DFA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation1(StringBuilder stringB,
-			Node<LabelT> parent, LabelT outLabel, Set<Node<LabelT>> visited,
-			Set<Pair<Node<LabelT>, LabelT>> loops) {
+			DNode<LabelT> parent, LabelT outLabel, Set<DNode<LabelT>> visited,
+			Set<Pair<DNode<LabelT>, LabelT>> loops) {
 
 		stringB.append("\n\t\t");
 
 		// Get the current node
-		Node<LabelT> node;
+		DNode<LabelT> node;
 		if (parent != null) {
 			node = parent.followArc(outLabel);
 		} else {
@@ -59,7 +59,7 @@ public class DFA<LabelT>
 
 		// If this is already drawn, save for later
 		if (visited.contains(node)) {
-			Pair<Node<LabelT>, LabelT> arc = new Pair<>(parent, outLabel);
+			Pair<DNode<LabelT>, LabelT> arc = new Pair<>(parent, outLabel);
 			loops.add(arc);
 			return;
 		}
@@ -73,7 +73,7 @@ public class DFA<LabelT>
 
 		// Add final, if that is the case
 		boolean openBracket = false;
-		if (((DNode<LabelT>) node).getFinalFlag()) {
+		if (node.getFinalFlag()) {
 			stringB.append("[accept");
 			openBracket = true;
 		}
@@ -112,13 +112,13 @@ public class DFA<LabelT>
 	 * @see DFA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation2(StringBuilder stringB,
-			Set<Pair<Node<LabelT>, LabelT>> loops) {
+			Set<Pair<DNode<LabelT>, LabelT>> loops) {
 
 		stringB.append(",\n");
 
 		// Writing edges one by one.
-		for (Pair<Node<LabelT>, LabelT> arc: loops) {
-			Node<LabelT> node = arc.left;
+		for (Pair<DNode<LabelT>, LabelT> arc: loops) {
+			DNode<LabelT> node = arc.left;
 			LabelT l = arc.right;
 
 			// If this is a self loop
@@ -154,18 +154,17 @@ public class DFA<LabelT>
 	public boolean parseSequence(List<LabelT> sequence) {
 
 		// Traverse the automaton
-		Node<LabelT> node = followPath(sequence);
+		DNode<LabelT> node = followPath(sequence);
 
 		if (node == null) {
 			return false;
 		}
-		return ((DNode<LabelT>) node).getFinalFlag();
+		return node.getFinalFlag();
 	}
 
 
 	/**
 	 * Returns the body of a tikzpicture in Latex that represents this graph.
-	 * NOTE: just the reachable states are printed.
 	 * @return The string for this graph
 	 */
 	@Override
@@ -173,8 +172,8 @@ public class DFA<LabelT>
 
 		// Data structures
 		StringBuilder stringB = new StringBuilder();
-		HashSet<Node<LabelT>> visited = new HashSet<>();
-		Set<Pair<Node<LabelT>,LabelT>> loops = new HashSet<>();
+		HashSet<DNode<LabelT>> visited = new HashSet<>();
+		Set<Pair<DNode<LabelT>,LabelT>> loops = new HashSet<>();
 
 		// Recursive call
 		buildLatexRepresentation1(stringB, null, null, visited, loops);
@@ -197,14 +196,14 @@ public class DFA<LabelT>
 		
 		// Define a graph
 		DFA<Character> dfa = new DFA<>();
-		DNode<Character> n1 = (DNode<Character>)dfa.newChild(dfa.firstNode, 'a');
-		DNode<Character> n2 = (DNode<Character>)dfa.newChild(n1, 'b');
-		DNode<Character> n3 = (DNode<Character>)dfa.newChild(n1, 'c');
+		DNode<Character> n1 = dfa.newChild(dfa.firstNode, 'a');
+		DNode<Character> n2 = dfa.newChild(n1, 'b');
+		DNode<Character> n3 = dfa.newChild(n1, 'c');
 		n3.addArc('a', n1);
 		n3.addArc('g', n3);
 		n2.setFinalFlag(true);
-		((DNode<Character>)dfa.firstNode).setFinalFlag(true);
-		DNode<Character> n4 = (DNode<Character>)dfa.newChild(n2, 'c');
+		dfa.firstNode.setFinalFlag(true);
+		DNode<Character> n4 = dfa.newChild(n2, 'c');
 		n4.setFinalFlag(true);
 
 		// Test parsing
@@ -223,9 +222,6 @@ public class DFA<LabelT>
 		LatexPrintableGraph printableGraph = dfa;
 		LatexSaver.saveLatexFile(printableGraph, new File("latex/dfa.tex"), 1);
 
-		// NOTE: we needed all these downcasts just because DFA still lacks a
-		// public API
-
 		System.out.println();
 	}
 
@@ -237,7 +233,7 @@ public class DFA<LabelT>
 	 * Each node can be final (i.e. accepting), or not.
 	 */
 	protected static class DNode<LabelT> 
-			extends Node<LabelT> {
+			extends AbstractNode<LabelT,DNode<LabelT>> {
 
 		// >>> Fields
 		
@@ -270,11 +266,9 @@ public class DFA<LabelT>
 		/**
 		 * Set if this state is accepting or not.
 		 * @param isFinal
-		 * @return This node
 		 */
-		public DNode<LabelT> setFinalFlag(boolean isFinal) {
+		public void setFinalFlag(boolean isFinal) {
 			this.isFinal = isFinal;
-			return this;
 		}
 
 

@@ -10,7 +10,7 @@ import java.io.File;
  * Each transition is corresponds to a label of type LabelT.
  */
 public class APTA<LabelT> 
-		extends AbstractGraph<LabelT>
+		extends AbstractGraph<LabelT, APTA.ANode<LabelT>>
 		implements Automaton<LabelT>, LatexPrintableGraph {
 
 	// >>> Private functions
@@ -45,10 +45,10 @@ public class APTA<LabelT>
 		}
 
 		// Parse the sequence with the tree
-		Node<LabelT> node = firstNode;
+		ANode<LabelT> node = firstNode;
 		int i;
 		for (i = 0; i < sequence.size(); ++i) {
-			Node<LabelT> nextNode = node.followArc(sequence.get(i));
+			ANode<LabelT> nextNode = node.followArc(sequence.get(i));
 			if (nextNode == null) { // If there is no such arc
 				break;
 			}
@@ -61,7 +61,7 @@ public class APTA<LabelT>
 		}
 
 		// Set the final state
-		((ANode<LabelT>)node).setResponse(response);
+		node.setResponse(response);
 
 		return true;
 	}
@@ -77,7 +77,7 @@ public class APTA<LabelT>
 	 * @see APTA#getLatexGraphRepresentation
 	 */
 	private void buildLatexRepresentation(StringBuilder stringB,
-			Node<LabelT> node) {
+			ANode<LabelT> node) {
 
 		stringB.append("\n\t\t");
 
@@ -86,7 +86,7 @@ public class APTA<LabelT>
 
 		// Add the response
 		boolean nodeOption = true;
-		ANode<LabelT> aNode = (ANode<LabelT>) node;
+		ANode<LabelT> aNode = node;
 		switch (aNode.getResponse()) {
 			case ACCEPT:
 				stringB.append("[accept] ");
@@ -147,13 +147,13 @@ public class APTA<LabelT>
 	public Response parseSequenceAPTA(List<LabelT> sequence) {
 
 		// Traverse the tree
-		Node<LabelT> node = followPath(sequence);
+		ANode<LabelT> node = followPath(sequence);
 
 		// Return the response of the final node
 		if (node == null) {
 			return Response.UNKNOWN;
 		}
-		return ((ANode<LabelT>)node).getResponse();
+		return node.getResponse();
 	}
 
 
@@ -239,8 +239,7 @@ public class APTA<LabelT>
 		}
 
 		// Changing a node
-		((ANode<Character>) tree.firstNode.followArc('c'))
-				.setResponse(Response.REJECT);
+		tree.firstNode.followArc('c').setResponse(Response.REJECT);
 
 		// Test parsing
 		for (List<Character> sequence: sequencesToParse) {
@@ -280,7 +279,7 @@ public class APTA<LabelT>
 	 * Each node can be accepting, rejecting or unknown.
 	 */
 	protected static class ANode<LabelT> 
-			extends Node<LabelT> {
+			extends AbstractNode<LabelT,ANode<LabelT>> {
 
 		// >>> Fields
 
@@ -299,12 +298,10 @@ public class APTA<LabelT>
 		 * Use null values to unset.
 		 * @param parent The parent node
 		 * @param parentLabel The label of the arc
-		 * @return This node
 		 */
-		private ANode<LabelT> setParent(ANode<LabelT> parent, LabelT parentLabel) {
+		private void setParent(ANode<LabelT> parent, LabelT parentLabel) {
 			this.parent = parent;
 			this.parentLabel = parentLabel;
-			return this;
 		}
 
 
@@ -351,11 +348,9 @@ public class APTA<LabelT>
 		/**
 		 * Set the response variable
 		 * @param response Reject, accept or unknown
-		 * @return This node
 		 */
-		public ANode<LabelT> setResponse(Response response) {
+		public void setResponse(Response response) {
 			this.response = response;
-			return this;
 		}
 
 
@@ -374,20 +369,12 @@ public class APTA<LabelT>
 		 * substituted with the new one. The parent field of node is also set.
 		 * @param label Label of the new connection
 		 * @param node The target node
-		 * @return this node
 		 */
 		@Override
-		public ANode<LabelT> addArc(LabelT label, Node<LabelT> node) {
+		public void addArc(LabelT label, ANode<LabelT> node) {
 
-			// Allow connections just from classes of the same type
-			if (!(node instanceof ANode)) {
-				throw new IllegalArgumentException(
-						"Can't connect toghether ANode and Node");
-			}
 			super.addArc(label, node);
-			((ANode<LabelT>)node).setParent(this, label);
-
-			return this;
+			node.setParent(this, label);
 		}
 
 
@@ -400,14 +387,12 @@ public class APTA<LabelT>
 		@Override
 		public ANode<LabelT> removeArc(LabelT label) {
 			
-			Node<LabelT> oldNode = super.removeArc(label);
-			ANode<LabelT> oldNodeA = null;
+			ANode<LabelT> oldNode = super.removeArc(label);
 
 			if (oldNode != null) {    // Such arc existed
-				oldNodeA = (ANode<LabelT>)oldNode;
-				oldNodeA.setParent(null, null);
+				oldNode.setParent(null, null);
 			}
-			return oldNodeA;
+			return oldNode;
 		}
 
 
@@ -422,7 +407,7 @@ public class APTA<LabelT>
 		 */
 		public static void test() {
 
-			System.out.println("Testing APTA.Node");
+			System.out.println("Testing APTA.ANode");
 
 			ANode<Character> n = new ANode<Character>(0);
 			ANode<Character> n1 = new ANode<Character>(1, Response.ACCEPT);
