@@ -278,7 +278,7 @@ public class APTA<LabelT>
 	 * Class for each node of the Augmented Prefix Tree Acceptor (a tree).
 	 * Each node can be accepting, rejecting or unknown.
 	 */
-	protected static class ANode<LabelT> 
+	public static class ANode<LabelT> 
 			extends AbstractNode<LabelT,ANode<LabelT>> {
 
 		// >>> Fields
