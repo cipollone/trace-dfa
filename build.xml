@@ -43,7 +43,7 @@
 	</target>
 
 	<target name="run" depends="compile">
-		<java classname="Main">
+		<java classname="main.Main">
 			<classpath>
 				<pathelement path="${build.dir}/classes"/>
 				<path refid="libs.path"/>

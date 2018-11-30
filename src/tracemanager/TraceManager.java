@@ -10,58 +10,65 @@ import org.deckfour.xes.in.*;
 import automata.APTA;
 
 
-/* TraceManager class */
+/**
+ * TraceManager class.
+ * It loads a single file in XES format, containing a sequence of events.
+ * Allows to add the sequences in an APTA data structure.
+ * @see automata.APTA
+ */
 public class TraceManager {
+
+	// >>> Fields
 
 	private File file;
 	
+
 	// >>> Constructors
 
+	/**
+	 * Constructor
+	 * @param pathname The path as a string
+	 */
 	public TraceManager(String pathname) {
 		this.file = new File(pathname);
 	}
 
+	/**
+	 * Constructor
+	 * @param file The path as a File
+	 */
 	public TraceManager(File file) {
 		this.file = file;
 	}
 
-	// >>> Public methods
+
+	// >>> Private methods
 
 	/**
-	 * Set a new file to be read 
+	 * Returns a list of all the logs on the file.
+	 * @return The list of logs
 	 */
-	public void setFile(String pathname) {
-		this.file = new File(pathname);
-	}
-
-	/**
-	 * Set a new file to be read 
-	 */
-	public void setFile(File file) {
-		this.file = file;
-	}
-
-	/**
-	 * Returns a list of all the logs on the file. In our case we have one log per file 
-	 */
-	public List<XLog> getLogs() {
+	private List<XLog> getLogs() {
 		XesXmlParser parser = new XesXmlParser();
 		List<XLog> xLogs = null;
 
 		try {
 			xLogs = parser.parse(file);
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception e) { // XesXmlParser declares to throw Exception
+			System.err.println(e.getMessage());  // Usually this is file not found
+			System.exit(1);
 		}
 
 		return xLogs;
 	}
 
+
 	/**
-	 * Returns a list of all the traces in the logs of the file, 
-	 * each a list of labels (strings) 
+	 * Returns a list of all the traces in the logs of the file.
+	 * Each trace is a list of labels (strings).
+	 * @return The parsed traces
 	 */
-	public List<List<String>> getTraces() {
+	private List<List<String>> getTraces() {
 		List<XLog> xLogs = getLogs();
 		List<List<String>> traces = new ArrayList<>();
 
@@ -78,8 +85,34 @@ public class TraceManager {
 		return traces;
 	}
 
+
+	// >>> Public methods
+
 	/**
-	 * Extends the tree passed to accept or reject new traces
+	 * Set a new file to be read.
+	 * @param pathname The path as a string.
+	 */
+	public void setFile(String pathname) {
+		this.file = new File(pathname);
+	}
+
+
+	/**
+	 * Set a new file to be read.
+	 * @param file The path as a File.
+	 */
+	public void setFile(File file) {
+		this.file = file;
+	}
+
+
+	/**
+	 * Extends the given tree to accept or reject new traces.
+	 * Adds the traces of the XES file to the given APTA.
+	 * If a file has "OK" in its name, those traces are added as "good" ones,
+	 * otherwise they are marked as "bad".
+	 * @param tree An APTA structure
+	 * @see automata.APTA
 	 */
 	public void addTracesToAPTA(APTA<String> tree) {
 		List<List<String>> traces = getTraces();
@@ -94,4 +127,40 @@ public class TraceManager {
 		}
 	}
 
+
+	/**
+	 * Static utility to load all .xes files in a directory.
+	 * Every .xes file in this directory (not its subdirs) is parsed an added
+	 * to a single APTA. If a file has "OK" in its name, those traces are added
+	 * as "good" ones, otherwise they are marked as "bad".
+	 * @param dir The directory
+	 * @return The complete APTA
+	 * @see automata.APTA
+	 */
+	public static APTA<String> parseTracesFiles(File dir) {
+
+		// Checks
+		if (!dir.exists() || !dir.isDirectory()) {
+			throw new IllegalArgumentException(dir + " is not a valid directory");
+		}
+
+		// Filter the .xes files
+		FileFilter xesFilter = new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.isFile() && file.getName().endsWith(".xes");
+			}
+		};
+
+		// New APTA
+		APTA<String> apta = new APTA<>();
+
+		// Add all xes files
+		for (File file: dir.listFiles(xesFilter)) {
+			TraceManager tm = new TraceManager(file);
+			tm.addTracesToAPTA(apta);
+		}
+
+		return apta;
+	}
 }
