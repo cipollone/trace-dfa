@@ -3,19 +3,37 @@ package cnf;
 
 import java.util.*;
 
-/* Class implementing propositional formulas */
+/**
+* Class implementing propositional formulas 
+*/
 public class Formula {
-	
-	private List<Clause> clauseList = new ArrayList<>();
 
+	// >>> Fields
+	
+	private Set<Clause> clauseList = new HashSet<>();
+
+	// >>> Public functions
+
+	/**
+	* Add a new clause to the formula
+	* @param c The clause to be added
+	*/
 	public void addClause(Clause c) {
 		clauseList.add(c);
 	}
 
+	/**
+	* Remove a clause from the formula
+	* @param c The clause to be removed
+	*/
 	public void removeClause(Clause c) {
 		clauseList.remove(c);
 	}
 
+	/**
+	* Returns if the formula is satisfied or not
+	* @return if the formula is satisfied or not
+	*/
 	public boolean isSatisfied() {
 		for (Clause c : clauseList) {
 			if (!c.isSatisfied()) {
@@ -25,6 +43,17 @@ public class Formula {
 		return true;
 	}
 
+	/**
+	* Returns the total number of clauses
+	* @return the total number of clauses
+	*/
+	public int getClauseNum() {
+		return clauseList.size();
+	}
+
+	/**
+	* Override of the toString method
+	*/
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");

@@ -3,27 +3,39 @@ package cnf;
 
 import java.util.*;
 
-/* Class implementing propositional clauses */
+/**
+* Class implementing propositional clauses
+*/
 public class Clause {
-	
-	private int index;
 
-	private List<Variable> positiveVariables = new ArrayList<>();
+	// >>> Fields
 
-	private List<Variable> negatedVariables = new ArrayList<>();
+	private Set<Variable> positiveVariables = new HashSet<>();
 
+	private Set<Variable> negatedVariables = new HashSet<>();
+
+	// >>> Public functions
+
+	/**
+	* Add a positive variable to the clause
+	* @param variable The variable to add
+	*/
 	public void addPositiveVariable(Variable variable) {
 		positiveVariables.add(variable);
 	}
 
+	/**
+	* Add a negated variable to the clause
+	* @param variable The variable to add negated
+	*/
 	public void addNegatedVariable(Variable variable) {
 		negatedVariables.add(variable);
 	}
 
-	public Clause(int i) {
-		this.index = i;
-	}
-
+	/**
+	* Returns if the clause is satisfied or not
+	* @return if the clause is satisfied or not
+	*/
 	public boolean isSatisfied() {
 		for (Variable variable : positiveVariables) {
 			if (variable.isTrue()) {
@@ -38,6 +50,10 @@ public class Clause {
 		return false;
 	}
 
+	/**
+	* Returns all the variables in the clause
+	* @return all the variables in the clause
+	*/
 	public Set<Variable> getAllVariables() {
 		Set<Variable> variables = new HashSet<>();
 		variables.addAll(positiveVariables);
@@ -45,6 +61,17 @@ public class Clause {
 		return variables;
 	}
 
+	/**
+	* Returns the number of all variables in the clause
+	* @return the number of all variables in the clause
+	*/
+	public int getVarNum() {
+		return getAllVariables().size();
+	}
+
+	/**
+	* Override of the toString method
+	*/
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
