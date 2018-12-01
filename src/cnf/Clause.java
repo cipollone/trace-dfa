@@ -3,7 +3,9 @@ package cnf;
 
 import java.util.*;
 
-/* Class implementing propositional clauses */
+/**
+* Class implementing propositional clauses
+*/
 public class Clause {
 
 	// >>> Fields
@@ -16,7 +18,7 @@ public class Clause {
 
 	/**
 	* Add a positive variable to the clause
-	* @param variable
+	* @param variable The variable to add
 	*/
 	public void addPositiveVariable(Variable variable) {
 		positiveVariables.add(variable);
@@ -24,7 +26,7 @@ public class Clause {
 
 	/**
 	* Add a negated variable to the clause
-	* @param variable
+	* @param variable The variable to add negated
 	*/
 	public void addNegatedVariable(Variable variable) {
 		negatedVariables.add(variable);
@@ -32,6 +34,7 @@ public class Clause {
 
 	/**
 	* Returns if the clause is satisfied or not
+	* @return if the clause is satisfied or not
 	*/
 	public boolean isSatisfied() {
 		for (Variable variable : positiveVariables) {
@@ -49,6 +52,7 @@ public class Clause {
 
 	/**
 	* Returns all the variables in the clause
+	* @return all the variables in the clause
 	*/
 	public Set<Variable> getAllVariables() {
 		Set<Variable> variables = new HashSet<>();
@@ -59,6 +63,7 @@ public class Clause {
 
 	/**
 	* Returns the number of all variables in the clause
+	* @return the number of all variables in the clause
 	*/
 	public int getVarNum() {
 		return getAllVariables().size();

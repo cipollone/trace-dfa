@@ -24,6 +24,7 @@ public class Variable {
 
 	/**
 	* Returns the index of the variable
+	* @return the index of the variable
 	*/
 	public String getIndex() {
 		return index;
@@ -31,6 +32,7 @@ public class Variable {
 
 	/**
 	* Returns if the variable is true
+	* @return if the variable is true
 	*/
 	public boolean isTrue() {
 		return assignment;
@@ -38,6 +40,7 @@ public class Variable {
 
 	/**
 	* Returns if the variable is false
+	* @return if the variable is false
 	*/
 	public boolean isFalse() {
 		return !assignment;

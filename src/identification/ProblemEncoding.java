@@ -75,6 +75,7 @@
 
 		/**
 		 * Returns all the x variables
+		 * @return all the x variables
 		 */
 		public Variable[][] getX() {
 			return x;
@@ -82,6 +83,7 @@
 
 		/**
 		 * Returns all the y variables
+		 * @return all the y variables
 		 */
 		public Map<String, Variable>[][] getY() {
 			return y;
@@ -89,6 +91,7 @@
 
 		/**
 		 * Returns all the z variables
+		 * @return all the z variables
 		 */
 		public Variable[] getZ() {
 			return z;

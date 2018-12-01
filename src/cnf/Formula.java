@@ -3,7 +3,9 @@ package cnf;
 
 import java.util.*;
 
-/* Class implementing propositional formulas */
+/**
+* Class implementing propositional formulas 
+*/
 public class Formula {
 
 	// >>> Fields
@@ -30,6 +32,7 @@ public class Formula {
 
 	/**
 	* Returns if the formula is satisfied or not
+	* @return if the formula is satisfied or not
 	*/
 	public boolean isSatisfied() {
 		for (Clause c : clauseList) {
@@ -42,6 +45,7 @@ public class Formula {
 
 	/**
 	* Returns the total number of clauses
+	* @return the total number of clauses
 	*/
 	public int getClauseNum() {
 		return clauseList.size();
