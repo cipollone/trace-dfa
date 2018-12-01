@@ -232,7 +232,7 @@ public class DFA<LabelT>
 	 * Class for each node of the DFA.
 	 * Each node can be final (i.e. accepting), or not.
 	 */
-	protected static class DNode<LabelT> 
+	public static class DNode<LabelT> 
 			extends AbstractNode<LabelT,DNode<LabelT>> {
 
 		// >>> Fields
@@ -265,7 +265,7 @@ public class DFA<LabelT>
 
 		/**
 		 * Set if this state is accepting or not.
-		 * @param isFinal
+		 * @param isFinal Final flag
 		 */
 		public void setFinalFlag(boolean isFinal) {
 			this.isFinal = isFinal;
@@ -274,6 +274,7 @@ public class DFA<LabelT>
 
 		/**
 		 * Returns whether this is a final state
+		 * @return Wether this is a final state
 		 */
 		public boolean getFinalFlag() {
 			return this.isFinal;

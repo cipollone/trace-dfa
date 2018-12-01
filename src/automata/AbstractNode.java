@@ -42,6 +42,7 @@ public abstract class AbstractNode<LabelT,
 	/**
 	 * Returns whether label exists from the current node.
 	 * @param label The label to check
+	 * @return Does this arc exist?
 	 */
 	public boolean hasArc(LabelT label) {
 		return outArcs.containsKey(label);
