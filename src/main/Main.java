@@ -3,13 +3,13 @@ package main;
 
 import java.io.File;
 
-import cnf.Formula;
+import cnf.DimacsSaver;
 
 
 public class Main {
 	public static void main(String args[]) {
 
-		Formula.test();
+		DimacsSaver.test();
 
 	}
 }

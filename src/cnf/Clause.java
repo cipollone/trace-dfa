@@ -3,6 +3,7 @@ package cnf;
 
 import java.util.*;
 
+
 /**
 * Class implementing propositional clauses
 */
@@ -86,7 +87,7 @@ public class Clause {
 	* @return the number of all variables in the clause
 	*/
 	public int getVarNum() {
-		return getAllVariables().size();
+		return positiveVariables.size() + negatedVariables.size();
 	}
 
 	/**
