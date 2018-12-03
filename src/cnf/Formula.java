@@ -47,6 +47,14 @@ public class Formula {
 	* Returns the total number of clauses
 	* @return the total number of clauses
 	*/
+	public Set<Clause> getClauseList() {
+		return clauseList;
+	}
+
+	/**
+	* Returns the total number of clauses
+	* @return the total number of clauses
+	*/
 	public int getClauseNum() {
 		return clauseList.size();
 	}
@@ -60,10 +68,10 @@ public class Formula {
 		String separator = "";
 		for (Clause c : clauseList) {
 			sb.append(separator);
-			separator = " and ";
+			separator = " A \n"; // \u2227 for and symbol
 			sb.append(c.toString());
 		}
-		sb.append("}");
+		sb.append("}\n");
 		return sb.toString();
 	}
 }

@@ -59,7 +59,7 @@ public class Variable {
 	*/
 	@Override
 	public String toString() {
-		return "x_" + index;
+		return index;
 	}
 
 	public boolean equal(Object o) {
