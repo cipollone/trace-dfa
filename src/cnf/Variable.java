@@ -1,6 +1,8 @@
 
 package cnf;
 
+import java.util.*;
+
 /**
 * Class implementing binary variables 
 */
@@ -8,6 +10,7 @@ public class Variable {
 
 	// >>> Fields
 
+	// Any unique descriptor: usually something like "x_3,5"
 	private String index;
 
 	private boolean assignment = false;
@@ -59,19 +62,20 @@ public class Variable {
 	*/
 	@Override
 	public String toString() {
-		return "x_" + index;
+		return index;
 	}
 
-	public boolean equal(Object o) {
-		if (o == null) {
-			return false;
+
+	/**
+	 * Utility function: creates new variables with the given names.
+	 * @param names The name of each variable
+	 * @return The list of the new variables
+	 */
+	public static List<Variable> newVars(String... names) {
+		ArrayList<Variable> vars = new ArrayList<>();
+		for (String name: names) {
+			vars.add(new Variable(name));
 		}
-		if (o == this) {
-			return true;
-		}
-		if (!getClass().equals(o.getClass())) {
-			return false;
-		}
-		return index == ((Variable) o).index;
+		return vars;
 	}
 }

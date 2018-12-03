@@ -1,16 +1,15 @@
 
 package main;
 
-import automata.*;
-import identification.DirectConstraintsGraph;
-
 import java.io.File;
+
+import cnf.Formula;
 
 
 public class Main {
 	public static void main(String args[]) {
 
-		DirectConstraintsGraph.test();
+		Formula.test();
 
 	}
 }

@@ -6,7 +6,8 @@ import java.util.*;
 /**
 * Class implementing propositional formulas 
 */
-public class Formula {
+public class Formula
+		implements Iterable<Clause> {
 
 	// >>> Fields
 	
@@ -15,11 +16,13 @@ public class Formula {
 	// >>> Public functions
 
 	/**
-	* Add a new clause to the formula
-	* @param c The clause to be added
+	* Add clauses to the formula
+	* @param clauses The clauses to be added
 	*/
-	public void addClause(Clause c) {
-		clauseList.add(c);
+	public void addClause(Clause... clauses) {
+		for (Clause c: clauses) {
+			clauseList.add(c);
+		}
 	}
 
 	/**
@@ -47,6 +50,22 @@ public class Formula {
 	* Returns the total number of clauses
 	* @return the total number of clauses
 	*/
+	public Set<Clause> getClauseList() {
+		return Collections.unmodifiableSet(clauseList);
+	}
+
+	/**
+	 * Iterator of clauses
+	 * @return Iterator
+	 */
+	public Iterator<Clause> iterator() {
+		return clauseList.iterator();
+	}
+
+	/**
+	* Returns the total number of clauses
+	* @return the total number of clauses
+	*/
 	public int getClauseNum() {
 		return clauseList.size();
 	}
@@ -60,10 +79,48 @@ public class Formula {
 		String separator = "";
 		for (Clause c : clauseList) {
 			sb.append(separator);
-			separator = " and ";
+			separator = " A \n"; // \u2227 for and symbol
 			sb.append(c.toString());
 		}
-		sb.append("}");
+		sb.append("}\n");
 		return sb.toString();
+	}
+
+
+	/**
+	 * Debug
+	 */
+	public static void test() {
+
+		List<Variable> x = Variable.newVars("x_0" , "x_1" , "x_2" , "x_3" , "x_4"
+				, "x_5" , "x_6" , "x_7");
+		Clause c1 = new Clause();
+		Clause c2 = new Clause();
+		Clause c3 = new Clause();
+		Clause c4 = new Clause();
+		c1.addPositiveVariable(x.get(0), x.get(2), x.get(5), x.get(6), x.get(7));
+		c1.addNegatedVariable(x.get(1), x.get(3), x.get(4));
+		c2.addPositiveVariable(x.get(3), x.get(5), x.get(7));
+		c2.addNegatedVariable(x.get(0));
+		c3.addNegatedVariable(x.get(1), x.get(2));
+		c4.addPositiveVariable(x.get(6));
+		Formula f = new Formula();
+		f.addClause(c1, c2, c3, c4);
+		System.out.println(f.toString());
+
+		// Testing Clause iterators
+		for (Variable v: c1.positiveVars()) {
+			System.out.print("  " + v);
+		}
+		System.out.println();
+		for (Variable v: c1.negatedVars()) {
+			System.out.print("  " + v);
+		}
+		System.out.println("\n");
+
+		// Testing Formula iterator
+		for (Clause c: f) {
+			System.out.println(c);
+		}
 	}
 }

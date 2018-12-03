@@ -17,19 +17,23 @@ public class Clause {
 	// >>> Public functions
 
 	/**
-	* Add a positive variable to the clause
-	* @param variable The variable to add
+	* Add positive variables to the clause
+	* @param variables The variables to add
 	*/
-	public void addPositiveVariable(Variable variable) {
-		positiveVariables.add(variable);
+	public void addPositiveVariable(Variable... variables) {
+		for (Variable v: variables) {
+			positiveVariables.add(v);
+		}
 	}
 
 	/**
-	* Add a negated variable to the clause
-	* @param variable The variable to add negated
+	* Add a negated variables to the clause
+	* @param variables The variables to add negated
 	*/
-	public void addNegatedVariable(Variable variable) {
-		negatedVariables.add(variable);
+	public void addNegatedVariable(Variable... variables) {
+		for (Variable v: variables) {
+			negatedVariables.add(v);
+		}
 	}
 
 	/**
@@ -62,6 +66,22 @@ public class Clause {
 	}
 
 	/**
+	 * Returns the iterable set of all positive variables in this clause
+	 * @return The set of posive variables
+	 */
+	public Set<Variable> positiveVars() {
+		return Collections.unmodifiableSet(positiveVariables);
+	}
+
+	/**
+	 * Returns the iterable set of all negated variables in this clause
+	 * @return The set of negated variables
+	 */
+	public Set<Variable> negatedVars() {
+		return Collections.unmodifiableSet(negatedVariables);
+	}
+
+	/**
 	* Returns the number of all variables in the clause
 	* @return the number of all variables in the clause
 	*/
@@ -89,5 +109,5 @@ public class Clause {
 		}
 		sb.append(")");
 		return sb.toString();
-	}	      
+	}
 }
