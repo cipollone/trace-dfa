@@ -41,6 +41,7 @@
 		 * @param apta The apta
 		 * @param colors The total number of colors
 		 */
+		@SuppressWarnings({"rawtypes","unchecked"})
 		public ProblemEncoding(DirectConstraintsGraph dcg, APTA<String> apta, int colors) {
 			
 			this.apta = apta;
@@ -139,7 +140,7 @@
 					for (int j = 0; j < colors; j++) {
 						Clause c = new Clause();
 						c.addPositiveVariable(y[i][j].get(v.getParentLabel()));
-						c.addNegatedVariable(x[v.getParent().getId()][i]);
+						c.addNegatedVariable(x[v.getParent().id][i]);
 						c.addNegatedVariable(x[v.id][j]);
 						encoding.addClause(c);
 					}
@@ -215,7 +216,7 @@
 					for (int j = 0; j < colors; j++) {
 						Clause c = new Clause();
 						c.addNegatedVariable(y[i][j].get(v.getParentLabel()));
-						c.addNegatedVariable(x[v.getParent().getId()][i]);
+						c.addNegatedVariable(x[v.getParent().id][i]);
 						c.addPositiveVariable(x[v.id][j]);
 						encoding.addClause(c);
 					}
