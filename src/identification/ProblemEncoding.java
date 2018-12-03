@@ -2,9 +2,11 @@
 package identification;
 
 import java.util.*;
-import util.Pair;
-import automata.APTA;
+import java.io.File;
+
+import automata.*;
 import cnf.*;
+import util.*;
 
 /**
 * Problem encoding, definition TBD
@@ -32,20 +34,19 @@ public class ProblemEncoding {
 
 	private APTA<String> apta;
 
-
 	// >>> Public functions
 
 	/**
 	 * Constructor: sets the apta, the corresponding dcg and the number of colors; initializes the variables x, y and z
-	 * @param dcg The direct constraints graph associated to the apta
 	 * @param apta The apta
 	 * @param colors The total number of colors
 	 */
 	@SuppressWarnings({"rawtypes","unchecked"})
-	public ProblemEncoding(DirectConstraintsGraph dcg, APTA<String> apta, int colors) {
+	public ProblemEncoding(APTA<String> apta, int colors) {
 		
+		this.dcg = new DirectConstraintsGraph(apta);
+
 		this.apta = apta;
-		this.dcg = dcg;
 		this.vertices = dcg.numberOfStates();
 		this.labels = dcg.allLabels();
 		this.colors = colors;
@@ -54,9 +55,11 @@ public class ProblemEncoding {
 		this.y = new HashMap[colors][colors];
 		this.z = new Variable[colors];
 
+		int varCount = 1;
+
 		for (int v = 0; v < vertices; v++) {
 			for (int i = 0; i < colors; i++) {
-				x[v][i] = new Variable(Integer.toString(v) + "," + Integer.toString(i));
+				x[v][i] = new Variable("x_" + Integer.toString(v) + "," + Integer.toString(i));
 			}
 		}
 
@@ -64,13 +67,13 @@ public class ProblemEncoding {
 			for (int j = 0; j < colors; j++) {
 				y[i][j] = new HashMap<>();
 				for (String label : labels) {
-					y[i][j].put(label, new Variable(label + "," + Integer.toString(i) + "," + Integer.toString(j)));
+					y[i][j].put(label, new Variable("y_" + label + "," + Integer.toString(i) + "," + Integer.toString(j)));
 				}
 			}
 		}
 
 		for (int i = 0; i < colors; i++) {
-			z[i] = new Variable(Integer.toString(i));
+			z[i] = new Variable("z_" + Integer.toString(i));
 		}
 	}
 
@@ -96,6 +99,14 @@ public class ProblemEncoding {
 	 */
 	public Variable[] getZ() {
 		return z;
+	}
+
+	/**
+	 * Returns the formula encoding the problem
+	 * @return the formula encoding the problem
+	 */
+	public Formula getEncoding() {
+		return encoding;
 	}
 
 	/**
@@ -138,11 +149,13 @@ public class ProblemEncoding {
 		for (APTA.ANode<String> v : apta) {
 			for (int i = 0; i < colors; i++) {
 				for (int j = 0; j < colors; j++) {
-					Clause c = new Clause();
-					c.addPositiveVariable(y[i][j].get(v.getParentLabel()));
-					c.addNegatedVariable(x[v.getParent().id][i]);
-					c.addNegatedVariable(x[v.id][j]);
-					encoding.addClause(c);
+					if (v.getParent() != null) {
+						Clause c = new Clause();
+						c.addPositiveVariable(y[i][j].get(v.getParentLabel()));
+						c.addNegatedVariable(x[v.getParent().id][i]);
+						c.addNegatedVariable(x[v.id][j]);
+						encoding.addClause(c);
+					}
 				}
 			}
 		}
@@ -214,11 +227,13 @@ public class ProblemEncoding {
 		for (APTA.ANode<String> v : apta) {
 			for (int i = 0; i < colors; i++) {
 				for (int j = 0; j < colors; j++) {
-					Clause c = new Clause();
-					c.addNegatedVariable(y[i][j].get(v.getParentLabel()));
-					c.addNegatedVariable(x[v.getParent().id][i]);
-					c.addPositiveVariable(x[v.id][j]);
-					encoding.addClause(c);
+					if (v.getParent() != null) {
+						Clause c = new Clause();
+						c.addNegatedVariable(y[i][j].get(v.getParentLabel()));
+						c.addNegatedVariable(x[v.getParent().id][i]);
+						c.addPositiveVariable(x[v.id][j]);
+						encoding.addClause(c);
+					}
 				}
 			}
 		}
@@ -241,5 +256,70 @@ public class ProblemEncoding {
 				encoding.addClause(c);
 			}
 		}
-	}		
+	}
+
+
+
+
+
+	public static void test() {
+
+		System.out.println("ProblemEncoding");
+
+		// Build a tree
+		APTA<String> apta = new APTA<>();
+
+		// Sequences to add
+		String[][] sa1 = {
+			{"ciao", "come", "stai", "?"},
+			{"ciao", "come", "stai", "?", "tutto", "bene", "?"},
+			{"ciao", "tutto", "bene", "?"},
+			{"salve", "come", "stai", "?"},
+			{"salve", "come", "va", "?"},
+			{"ciao"},
+			{"salve"}
+		};
+		
+		String[][] sr1 = {
+			{"ciao", "come", "va"},
+			{"salve", "come", "va"},
+			{"salve", "come", "stai"},
+			{"ciao", "come", "stai"},
+			{"bella"},
+			{"bella", "zi"}
+		};
+
+		for (String[] seq: sa1) {
+			List<String> seqL = new ArrayList<>();
+			for (String s: seq) {
+				seqL.add(s);
+			}
+			apta.acceptSequence(seqL);
+		} 
+		for (String[] seq: sr1) {
+			List<String> seqL = new ArrayList<>();
+			for (String s: seq) {
+				seqL.add(s);
+			}
+			apta.rejectSequence(seqL);
+		}
+
+		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
+
+		for (int colors = 4; colors < 5; colors++) {
+			ProblemEncoding pe = new ProblemEncoding(apta,colors);
+			pe.atLeastOneColor();
+			pe.accRejNotSameColor();
+			pe.parentRelationWhenColor();
+			pe.parentAtMostOneColor();
+			pe.atMostOneColor();
+			pe.parentAtLeastOneColor();
+			pe.parentForceVertex();
+			pe.determinConflicts();
+			// System.out.println(pe.getEncoding().toString());
+			// System.out.println(pe.getEncoding().getClauseList().iterator().next());
+			// System.out.println(pe.getEncoding().getClauseList().iterator().next().getAllVariables().iterator().next());
+			System.out.println("Number of clauses: " + pe.getEncoding().getClauseNum() + "\n\n");
+		}
+	}
 }

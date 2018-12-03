@@ -1,15 +1,17 @@
 
 package main;
 
-import java.io.File;
-
+import automata.*;
+import identification.*;
 import cnf.DimacsSaver;
+
+import java.io.File;
 
 
 public class Main {
 	public static void main(String args[]) {
 
-		DimacsSaver.test();
+		ProblemEncoding.test();
 
 	}
 }
