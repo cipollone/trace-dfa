@@ -1,15 +1,15 @@
 
 package main;
 
-import identification.ProblemEncoding;
-
 import java.io.File;
+
+import automata.DFABuilder;
 
 
 public class Main {
 	public static void main(String args[]) {
 
-		ProblemEncoding.test();
+		DFABuilder.test();
 
 	}
 }

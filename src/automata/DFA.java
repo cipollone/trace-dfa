@@ -20,13 +20,13 @@ public class DFA<LabelT>
 	// >>> Private functions
 	
 	/**
-	 * Returns a new node to be added to the graph.
-	 * This is an important override.
+	 * Creates a new node instance.
+	 * Just the override is important.
 	 * @param id the id
 	 * @return A new DNode
 	 */
 	@Override
-	protected DNode<LabelT> newNode(int id) {
+	DNode<LabelT> newNodeObj(int id) {
 		return new DNode<LabelT>(id);
 	}
 	
