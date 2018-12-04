@@ -1,9 +1,7 @@
 
 package main;
 
-import automata.*;
-import identification.*;
-import cnf.DimacsSaver;
+import identification.ProblemEncoding;
 
 import java.io.File;
 

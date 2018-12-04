@@ -11,7 +11,7 @@ public class Variable {
 	// >>> Fields
 
 	// Any unique descriptor: usually something like "x_3,5"
-	private String index;
+	private final String index;
 
 	private boolean assignment = false;
 
