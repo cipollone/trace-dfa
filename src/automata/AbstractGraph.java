@@ -104,6 +104,13 @@ public abstract class AbstractGraph<LabelT,
 		firstNode = newNode();
 	}
 
+	/**
+	 * Returns the first node of the graph
+	 * @return the first node of the graph
+	 */
+	public NodeT getFirstNode() {
+		return firstNode;
+	}
 
 	/**
 	 * Return a new iterator of nodes.

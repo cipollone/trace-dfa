@@ -125,7 +125,7 @@ public class DFA<LabelT>
 			if (node.followArc(l) == node) {
 				stringB.append("\t\t").
 						append(node.id).
-						append(" -> [self loop] ").
+						append(" -> [clear >, \"" + l + "\",self loop] ").
 						append(node.id).
 						append(",\n");
 			}
@@ -133,7 +133,7 @@ public class DFA<LabelT>
 			else {
 				stringB.append("\t\t").
 						append(node.id).
-						append(" -> [backward] ").
+						append(" -> [clear >, \"" + l + "\",backward] ").
 						append(node.followArc(l).id).
 						append(",\n");
 			}

@@ -1,10 +1,19 @@
 
 package identification;
 
-import cnf.Variable;
+import cnf.*;
 import automata.*;
 import java.util.*;
-import java.io.File;
+import java.io.*;
+
+import org.sat4j.minisat.SolverFactory;
+import org.sat4j.reader.DimacsReader;
+import org.sat4j.reader.ParseFormatException;
+import org.sat4j.reader.Reader;
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.IProblem;
+import org.sat4j.specs.ISolver;
+import org.sat4j.specs.TimeoutException;
 
 
 /**
@@ -22,27 +31,85 @@ public class Solver {
 	 */
 	private static List<EncodingVariable> extractSolution() {
 
-		// TODO: change this with the result of the solver. This was just for
-		// testing
-		EncodingVariable[] vars = {
-				new ParentVariable("ciao", 0, 1, true),
-				new ParentVariable("ciao", 1, 1),
-				new ParentVariable("ooo", 1, 2, true),
-				new ParentVariable("o", 2, 0, true),
-				new ParentVariable("p", 2, 2, true),
-				new FinalVariable(2, true),
-				new FinalVariable(0, true),
-				new FinalVariable(1),
-				new FinalVariable(5),
-				new ParentVariable("v", 5, 2, true),
-				new InitialColorVariable(55, 5, true)
-		};
-		List<EncodingVariable> varsL = new ArrayList<EncodingVariable>();
-		for (EncodingVariable v: vars) {
-			varsL.add(v);
+		Formula f = ProblemEncoding.test();
+
+		DimacsSaver saver = new DimacsSaver(f);
+		try {
+			boolean ret = saver.saveToDimacsFile(new File("test.cnf"));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
-		return varsL;
+		List<EncodingVariable> varList = null;
+
+		ISolver solver = SolverFactory.newDefault();
+        solver.setTimeout(3600); // 1 hour timeout
+        Reader reader = new DimacsReader(solver);
+        PrintWriter out = new PrintWriter(System.out,true);
+        // CNF filename is given on the command line 
+        try {
+            IProblem problem = reader.parseInstance("test.cnf");
+            if (problem.isSatisfiable()) {
+                reader.decode(problem.model(),out);
+                System.out.println("Satisfiable !");
+                Map<Integer,Variable> mapToVar = saver.idToVarsMap();
+                for (int i = 0; i < problem.model().length; i++) {
+                	if (problem.model()[i] < 0) {
+                		System.out.println("-" + mapToVar.get(Math.abs(problem.model()[i])));
+                	} else {
+                		System.out.println(mapToVar.get(Math.abs(problem.model()[i])));
+                	}
+                }
+                System.out.println("\n\n");
+                for (int i = 0; i < problem.model().length; i++) {
+                	if (problem.model()[i] < 0) {
+                	} else if (problem.model()[i] >= 0) {
+                		if (mapToVar.get(Math.abs(problem.model()[i])).getIndex().substring(0,1).equals("z")) {
+                			System.out.println(mapToVar.get(problem.model()[i]));
+                		}
+                	}
+                }
+                System.out.println("\n\n");
+                for (int i = 0; i < problem.model().length; i++) {
+                	if (problem.model()[i] < 0) {
+                	} else if (problem.model()[i] >= 0) {
+                		if (mapToVar.get(Math.abs(problem.model()[i])).getIndex().substring(0,1).equals("x")) {
+                			System.out.println(mapToVar.get(problem.model()[i]));
+                		}
+                	}
+                }
+                System.out.println("\n\n");
+                for (int i = 0; i < problem.model().length; i++) {
+                	if (problem.model()[i] < 0) {
+                	} else if (problem.model()[i] >= 0) {
+                		if (mapToVar.get(Math.abs(problem.model()[i])).getIndex().substring(0,1).equals("y")) {
+                			System.out.println(mapToVar.get(problem.model()[i]));
+                		}
+                	}
+                }
+                varList = new ArrayList<>(problem.model().length);
+                for (Integer i : problem.model()) {
+                	if (i > 0) {
+                		EncodingVariable ev = (EncodingVariable)mapToVar.get(i);
+                		ev.assign(true);
+                		varList.add(ev);
+                	}
+                }
+            } else {
+                System.out.println("Unsatisfiable !");
+            }
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+        } catch (ParseFormatException e) {
+            // TODO Auto-generated catch block
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+        } catch (ContradictionException e) {
+            System.out.println("Unsatisfiable (trivial)!");
+        } catch (TimeoutException e) {
+            System.out.println("Timeout, sorry!");      
+        }
+        return varList;
 	}
 	
 
