@@ -28,7 +28,7 @@ public abstract class AbstractGraph<LabelT,
 	// >>> Fields
 	
 	/* The graph must contain at least one node: the first node */
-	protected final NodeT firstNode;
+	NodeT firstNode;
 
 	/* Counters */
 	private int nextFreeId;
@@ -37,13 +37,22 @@ public abstract class AbstractGraph<LabelT,
 	// >>> Protected functions
 
 	/**
-	 * Returns a new node to be added to the graph.
+	 * Returns a new node object with the given id.
 	 * Subclasses must override this method to use their own node class
 	 * which extends AbstractNode.
 	 * @param id the id
 	 * @return A new Node
 	 */
-	protected abstract NodeT newNode(int id);
+	abstract NodeT newNodeObj(int id);
+
+
+	/**
+	 * Returns a new node to be added to the graph (with a new id).
+	 * @return A new node
+	 */
+	protected NodeT newNode() {
+		return newNodeObj(nextFreeId++);
+	}
 
 
 	/**
@@ -54,7 +63,7 @@ public abstract class AbstractGraph<LabelT,
 	 */
 	protected NodeT newChild(NodeT parent, LabelT label) {
 
-		NodeT child = newNode(nextFreeId++);
+		NodeT child = newNode();
 		parent.addArc(label, child);
 		return child;
 	}
@@ -85,6 +94,17 @@ public abstract class AbstractGraph<LabelT,
 	}
 
 
+	// >>> Public functions
+	
+	/**
+	 * Constructor
+	 */
+	public AbstractGraph() {
+		nextFreeId = 0;
+		firstNode = newNode();
+	}
+
+
 	/**
 	 * Return a new iterator of nodes.
 	 * Iterates the nodes with DepthPreIterator, a depth first visit.
@@ -93,17 +113,6 @@ public abstract class AbstractGraph<LabelT,
 	@Override
 	public Iterator<NodeT> iterator() {
 		return new DepthPreIterator();
-	}
-
-
-	// >>> Public functions
-	
-	/**
-	 * Constructor
-	 */
-	public AbstractGraph() {
-		nextFreeId = 0;
-		firstNode = newNode(nextFreeId++);
 	}
 
 
@@ -151,7 +160,7 @@ public abstract class AbstractGraph<LabelT,
 		// Define a graph
 		class AbsGraph<LabelT> extends AbstractGraph<LabelT,Node<LabelT>> {
 			@Override
-			public Node<LabelT> newNode(int id) {
+			public Node<LabelT> newNodeObj(int id) {
 				return new Node<LabelT>(id);
 			}
 		};

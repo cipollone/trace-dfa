@@ -1,17 +1,18 @@
 
 package main;
 
-import automata.*;
-import identification.*;
-import cnf.DimacsSaver;
-
 import java.io.File;
+
+import identification.Solver;
 
 
 public class Main {
 	public static void main(String args[]) {
 
-		ProblemEncoding.test();
+		Solver.test();
 
 	}
 }
+
+
+// TODO: why backward loops have no label?

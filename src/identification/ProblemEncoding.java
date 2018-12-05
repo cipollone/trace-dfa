@@ -55,11 +55,15 @@ public class ProblemEncoding {
 		this.y = new HashMap[colors][colors];
 		this.z = new Variable[colors];
 
-		int varCount = 1;
+		int firstNodeId = apta.getFirstNode().id;
 
 		for (int v = 0; v < vertices; v++) {
 			for (int i = 0; i < colors; i++) {
-				x[v][i] = new Variable("x_" + Integer.toString(v) + "," + Integer.toString(i));
+				if (firstNodeId == v) {
+					x[v][i] = new InitialColorVariable(v,i);
+				} else {
+					x[v][i] = new ColorVariable(v,i);
+				}
 			}
 		}
 
@@ -67,13 +71,13 @@ public class ProblemEncoding {
 			for (int j = 0; j < colors; j++) {
 				y[i][j] = new HashMap<>();
 				for (String label : labels) {
-					y[i][j].put(label, new Variable("y_" + label + "," + Integer.toString(i) + "," + Integer.toString(j)));
+					y[i][j].put(label, new ParentVariable(label, i, j));
 				}
 			}
 		}
 
 		for (int i = 0; i < colors; i++) {
-			z[i] = new Variable("z_" + Integer.toString(i));
+			z[i] = new FinalVariable(i);
 		}
 	}
 

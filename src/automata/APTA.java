@@ -16,13 +16,13 @@ public class APTA<LabelT>
 	// >>> Private functions
 
 	/**
-	 * Returns a new node to be added to the graph.
-	 * This is an important override.
+	 * Creates a new node instance.
+	 * Just the override is important.
 	 * @param id the id
 	 * @return A new ANode
 	 */
 	@Override
-	protected ANode<LabelT> newNode(int id) {
+	ANode<LabelT> newNodeObj(int id) {
 		return new ANode<LabelT>(id);
 	}
 	
