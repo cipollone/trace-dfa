@@ -2,7 +2,7 @@
 package identification;
 
 import cnf.Variable;
-import automata.DFA;
+import automata.DFABuilder;
 
 
 /**
@@ -10,14 +10,13 @@ import automata.DFA;
  * Variable x with two subscrips (v,i)
  */
 public class ColorVariable
-		extends Variable
-		implements DfaAction {
+		extends EncodingVariable {
 
 
 	// >>> Fields
 
-	private final int vertexId; // v
-	private final int colorId;  // i
+	protected final int vertexId; // v
+	protected final int colorId;  // i
 
 
 	// >>> Public functions
@@ -26,11 +25,22 @@ public class ColorVariable
 	 * Constructor
 	 * @param vertexId The numeric id of a vertex
 	 * @param colorId The numeric id of a color
+	 * @param value The boolean value
 	 */
-	public ColorVariable(int vertexId, int colorId) {
-		super("x_" + Integer.toString(vertexId) + "," + Integer.toString(colorId));
+	public ColorVariable(int vertexId, int colorId, boolean value) {
+		super("x_" + Integer.toString(vertexId) + "," + Integer.toString(colorId), value);
 		this.vertexId = vertexId;
 		this.colorId = colorId;
+	}
+
+
+	/**
+	 * Constructor
+	 * @param vertexId The numeric id of a vertex
+	 * @param colorId The numeric id of a color
+	 */
+	public ColorVariable(int vertexId, int colorId) {
+		this(vertexId, colorId, false);
 	}
 
 
@@ -38,5 +48,5 @@ public class ColorVariable
 	 * Nothing to do with these variables: nodes are created automatically.
 	 */
 	@Override
-	public void extendDFA(DFA<String> dfa) { }
+	public void actionOnDFA(DFABuilder<String> dfa) { }
 }

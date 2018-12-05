@@ -3,13 +3,16 @@ package main;
 
 import java.io.File;
 
-import automata.DFABuilder;
+import identification.Solver;
 
 
 public class Main {
 	public static void main(String args[]) {
 
-		DFABuilder.test();
+		Solver.test();
 
 	}
 }
+
+
+// TODO: why backward loops have no label?

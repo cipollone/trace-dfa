@@ -2,7 +2,7 @@
 package identification;
 
 import cnf.Variable;
-import automata.DFA;
+import automata.DFABuilder;
 
 
 /**
@@ -10,8 +10,7 @@ import automata.DFA;
  * Variable z with one subscript (i)
  */
 public class FinalVariable
-		extends Variable
-		implements DfaAction {
+		extends EncodingVariable {
 
 
 	// >>> Fields
@@ -24,10 +23,20 @@ public class FinalVariable
 	/**
 	 * Constructor
 	 * @param colorId The numeric id of a color
+	 * @param value The boolean value
+	 */
+	public FinalVariable(int colorId, boolean value) {
+		super("z_" + Integer.toString(colorId), value);
+		this.colorId = colorId;
+	}
+
+
+	/**
+	 * Constructor
+	 * @param colorId The numeric id of a color
 	 */
 	public FinalVariable(int colorId) {
-		super("z_" + Integer.toString(colorId));
-		this.colorId = colorId;
+		this(colorId, false);
 	}
 
 
@@ -36,7 +45,7 @@ public class FinalVariable
 	 * @param dfa The partial DFA
 	 */ 
 	@Override
-	public void extendDFA(DFA<String> dfa) {
-		// TODO
+	public void actionOnDFA(DFABuilder<String> dfa) {
+		dfa.setFinalState(colorId);
 	}
 }

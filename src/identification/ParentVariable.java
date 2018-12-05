@@ -2,7 +2,7 @@
 package identification;
 
 import cnf.Variable;
-import automata.DFA;
+import automata.DFABuilder;
 
 
 /**
@@ -11,8 +11,7 @@ import automata.DFA;
  * has color j. Variable y with three subscripts (a,i,j).
  */
 public class ParentVariable
-		extends Variable
-		implements DfaAction {
+		extends EncodingVariable {
 
 
 	// >>> Fields
@@ -29,13 +28,25 @@ public class ParentVariable
 	 * @param label The label of an arc
 	 * @param parentId The numeric id of the parent vertex
 	 * @param childId The numeric id of the child vertex
+	 * @param val The boolean value
 	 */
-	public ParentVariable(String label, int parentId, int childId) {
+	public ParentVariable(String label, int parentId, int childId, boolean val) {
 		super("y_" + label + "," + Integer.toString(parentId) + "," +
-				Integer.toString(childId));
+				Integer.toString(childId), val);
 		this.label = label;
 		this.parentId = parentId;
 		this.childId = childId;
+	}
+
+
+	/**
+	 * Constructor
+	 * @param label The label of an arc
+	 * @param parentId The numeric id of the parent vertex
+	 * @param childId The numeric id of the child vertex
+	 */
+	public ParentVariable(String label, int parentId, int childId) {
+		this(label, parentId, childId, false);
 	}
 
 
@@ -44,7 +55,7 @@ public class ParentVariable
 	 * @param dfa A partial DFA
 	 */
 	@Override
-	public void extendDFA(DFA<String> dfa) { 
-		// TODO
+	public void actionOnDFA(DFABuilder<String> dfa) { 
+		dfa.newArc(parentId, label, childId);
 	}
 }

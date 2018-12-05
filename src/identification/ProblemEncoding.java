@@ -55,11 +55,15 @@ public class ProblemEncoding {
 		this.y = new HashMap[colors][colors];
 		this.z = new Variable[colors];
 
-		int varCount = 1;
+		int firstNodeId = apta.getFirstNode().id;
 
 		for (int v = 0; v < vertices; v++) {
 			for (int i = 0; i < colors; i++) {
-				x[v][i] = new ColorVariable(v,i);
+				if (firstNodeId == v) {
+					x[v][i] = new InitialColorVariable(v,i);
+				} else {
+					x[v][i] = new ColorVariable(v,i);
+				}
 			}
 		}
 
