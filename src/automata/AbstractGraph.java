@@ -28,7 +28,7 @@ public abstract class AbstractGraph<LabelT,
 	// >>> Fields
 	
 	/* The graph must contain at least one node: the first node */
-	protected final NodeT firstNode;
+	NodeT firstNode;
 
 	/* Counters */
 	private int nextFreeId;
@@ -94,17 +94,6 @@ public abstract class AbstractGraph<LabelT,
 	}
 
 
-	/**
-	 * Return a new iterator of nodes.
-	 * Iterates the nodes with DepthPreIterator, a depth first visit.
-	 * @return A new Iterator
-	 */
-	@Override
-	public Iterator<NodeT> iterator() {
-		return new DepthPreIterator();
-	}
-
-
 	// >>> Public functions
 	
 	/**
@@ -113,6 +102,17 @@ public abstract class AbstractGraph<LabelT,
 	public AbstractGraph() {
 		nextFreeId = 0;
 		firstNode = newNode();
+	}
+
+
+	/**
+	 * Return a new iterator of nodes.
+	 * Iterates the nodes with DepthPreIterator, a depth first visit.
+	 * @return A new Iterator
+	 */
+	@Override
+	public Iterator<NodeT> iterator() {
+		return new DepthPreIterator();
 	}
 
 

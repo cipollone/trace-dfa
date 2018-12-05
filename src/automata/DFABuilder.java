@@ -48,11 +48,10 @@ public class DFABuilder<LabelT> {
 	// >>> Public functions
 
 	/**
-	 * Constructor
-	 * @param initialState ID of the initial state (always present)
+	 * Constructor.
 	 */
-	public DFABuilder(int initialState) {
-		states.put(initialState, dfa.firstNode); // Inital state is already there
+	public DFABuilder() {
+		states.put(0, dfa.firstNode); // Inital state is already there
 	}
 
 
@@ -64,6 +63,16 @@ public class DFABuilder<LabelT> {
 	public void setFinalState(int state) {
 		DFA.DNode<LabelT> node = aState(state);
 		node.setFinalFlag(true);
+	}
+
+
+	/**
+	 * Set this state as the initial state in the DFA.
+	 * @param state The id of the initial state
+	 */
+	public void setInitialState(int state) {
+		DFA.DNode<LabelT> node = aState(state);
+		dfa.firstNode = node;
 	}
 
 
@@ -95,7 +104,7 @@ public class DFABuilder<LabelT> {
 	 */
 	public static void test() {
 
-		DFABuilder<String> builder = new DFABuilder<String>(0);
+		DFABuilder<String> builder = new DFABuilder<String>();
 
 		// Build the graph
 		builder.newArc(0, "ciao", 1);
@@ -108,7 +117,20 @@ public class DFABuilder<LabelT> {
 
 		// Output
 		DFA<String> dfa = builder.getDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/dfa.tex"), 1);
+		LatexSaver.saveLatexFile(dfa, new File("latex/dfa1.tex"), 1);
 
+		// Changing initial state
+		builder.setInitialState(0);
+		dfa = builder.getDFA();
+		LatexSaver.saveLatexFile(dfa, new File("latex/dfa2.tex"), 1);
+
+		builder.setInitialState(1);
+		dfa = builder.getDFA();
+		LatexSaver.saveLatexFile(dfa, new File("latex/dfa3.tex"), 1);
+
+		builder.setInitialState(35);
+		builder.newArc(35, "woooo", 36);
+		dfa = builder.getDFA();
+		LatexSaver.saveLatexFile(dfa, new File("latex/dfa4.tex"), 1);
 	}
 }

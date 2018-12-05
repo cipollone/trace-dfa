@@ -13,7 +13,8 @@ public class Variable {
 	// Any unique descriptor: usually something like "x_3,5"
 	private final String index;
 
-	private boolean assignment = false;
+	protected boolean assignment = false;
+
 
 	// >>> Public functions
 
@@ -23,6 +24,16 @@ public class Variable {
 	*/
 	public Variable(String i) {
 		this.index = i;
+	}
+
+	/**
+	* Constructor: index and value
+	* @param i The string that sets the index
+	* @param b The boolean value
+	*/
+	public Variable(String i, boolean b) {
+		this.index = i;
+		this.assignment = b;
 	}
 
 	/**
