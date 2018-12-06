@@ -49,4 +49,34 @@ public class Main {
             }
         }
 	}
+
+	/**
+	 * Test all models on a set of traces.
+	 * All automata in models must parse with the same result all traces.
+	 * @param traces A list of test sequences
+	 * @param models The models to compare
+	 * @return true if all results are consistent, false otherwise.
+	 */
+	@SafeVarargs
+	public static <LabelT> boolean compareOnTraces(List<List<LabelT>> traces,
+			Automaton<LabelT>... models) { 
+
+		// For each sequence
+		for (List<LabelT> trace: traces) {
+
+			// For each model
+			Boolean result = null;
+			for (Automaton<LabelT> model: models) {
+				if (result == null) { // Save first
+					result = model.parseSequence(trace);
+				} else {              // Compare others
+					if (result != model.parseSequence(trace)) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
 }

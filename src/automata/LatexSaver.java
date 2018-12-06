@@ -53,7 +53,7 @@ public final class LatexSaver {
 			"			.. controls +(70:1) and +(110:1) .. (\\tikztotarget) \\tikztonodes}}\n" +
 			"	]\n" +
 			"	\\graph [\n" +
-			"			grow right sep=1.0cm,\n" +
+			"			grow right sep=" + spaceCm + "cm,\n" +
 			"			branch down sep=0.6cm,\n" +
 			"			nodes={draw,circle},\n" +
 			"			edge quotes={font={\\scriptsize}, inner sep=0.3ex, auto, midway}\n" +

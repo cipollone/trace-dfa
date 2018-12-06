@@ -93,15 +93,4 @@ public class Solver {
 
 		return dfaBuilder.getDFA();
 	}
-
-
-	/**
-	 * Debugging
-	 */
-	// public static void test() {
-
-	// 	DFA<String> dfa = extractNewDFA();
-	// 	LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 1);
-
-	// }
 }

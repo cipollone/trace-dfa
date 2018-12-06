@@ -32,6 +32,56 @@ public class DFA<LabelT>
 	
 
 	/**
+	 * Create a new DFA with merged arcs for each pair of nodes.
+	 * This is useful for printing in Latex the graph. Arcs won't be overlapped.
+	 * NOTE: LabelT should have a good string representation.
+	 * @return A new DFA representing this object. The two DFA are not
+	 * equivalent.
+	 */
+	private DFA<String> simpleArcsRepresentation() {
+
+		DFA<String> simpleDFA = new DFA<>();  // Create a new DFA
+		Map<DNode<LabelT>, DNode<String>> nodesMap =  // Old -> new map
+				new HashMap<>();
+	
+		// Create all nodes in advance
+		for (DNode<LabelT> node: this) {
+			nodesMap.put(node, new DNode<String>(node.id, node.getFinalFlag()));
+		}
+
+		// Set initial state
+		simpleDFA.firstNode = nodesMap.get(this.firstNode);
+
+		// Traverse this graph for the arcs
+		for (DNode<LabelT> node: this) {
+
+			// Map child -> merged arcs
+			Map<DNode<String>, String> mergedArcs = new HashMap<>();
+
+			// List and merge all arcs
+			for (LabelT arc: node.getLabels()) {
+				DNode<String> newChild = nodesMap.get(node.followArc(arc));
+				String mergedArc = mergedArcs.get(newChild);
+				if (mergedArc == null) { // Add new
+					mergedArc = arc.toString();
+				} else {                 // Merge new
+					mergedArc = mergedArc + " | " + arc.toString();
+				}
+				mergedArcs.put(newChild, mergedArc);
+			}
+
+			// Add the merged arcs to the new node
+			for (DNode<String> newChild: mergedArcs.keySet()) {
+				DNode<String> newNode = nodesMap.get(node);
+				newNode.addArc(mergedArcs.get(newChild), newChild);
+			}
+		}
+
+		return simpleDFA;
+	}
+
+
+	/**
 	 * Build LaTex tree representation.
 	 * Depth first visit of the graph. First part of the helper function:
 	 * just a spanning tree is printed.
@@ -46,8 +96,6 @@ public class DFA<LabelT>
 	private void buildLatexRepresentation1(StringBuilder stringB,
 			DNode<LabelT> parent, LabelT outLabel, Set<DNode<LabelT>> visited,
 			Set<Pair<DNode<LabelT>, LabelT>> loops) {
-
-		stringB.append("\n\t\t");
 
 		// Get the current node
 		DNode<LabelT> node;
@@ -69,6 +117,7 @@ public class DFA<LabelT>
 		Set<LabelT> labels = node.getLabels();
 
 		// Add the node id
+		stringB.append("\n\t\t");
 		stringB.append(node.id).append(' ');
 
 		// Add final, if that is the case
@@ -125,7 +174,7 @@ public class DFA<LabelT>
 			if (node.followArc(l) == node) {
 				stringB.append("\t\t").
 						append(node.id).
-						append(" -> [clear >, \"" + l + "\",self loop] ").
+						append(" -> [clear >, \"" + l + "\", self loop] ").
 						append(node.id).
 						append(",\n");
 			}
@@ -133,7 +182,7 @@ public class DFA<LabelT>
 			else {
 				stringB.append("\t\t").
 						append(node.id).
-						append(" -> [clear >, \"" + l + "\",backward] ").
+						append(" -> [clear >, \"" + l + "\", backward] ").
 						append(node.followArc(l).id).
 						append(",\n");
 			}
@@ -170,16 +219,19 @@ public class DFA<LabelT>
 	@Override
 	public String getLatexGraphRepresentation() {
 
+		// Simplify the graph
+		DFA<String> simpleDFA = simpleArcsRepresentation();
+
 		// Data structures
 		StringBuilder stringB = new StringBuilder();
-		HashSet<DNode<LabelT>> visited = new HashSet<>();
-		Set<Pair<DNode<LabelT>,LabelT>> loops = new HashSet<>();
+		HashSet<DNode<String>> visited = new HashSet<>();
+		Set<Pair<DNode<String>,String>> loops = new HashSet<>();
 
 		// Recursive call
-		buildLatexRepresentation1(stringB, null, null, visited, loops);
+		simpleDFA.buildLatexRepresentation1(stringB, null, null, visited, loops);
 
 		// Adding remaining edges
-		buildLatexRepresentation2(stringB, loops);
+		simpleDFA.buildLatexRepresentation2(stringB, loops);
 
 		return stringB.toString();
 	}
