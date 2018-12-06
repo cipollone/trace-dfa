@@ -17,6 +17,7 @@ public class Main {
         // Build a tree and fill it with traces
         File fileDir = new File(args[0]);
         APTA<String> apta = TraceManager.parseTracesFiles(fileDir);
+        List<List<String>> traces = TraceManager.getTracesFiles(fileDir);
 
         // OPTIONAL: draw APTA
         LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
@@ -32,7 +33,7 @@ public class Main {
             // Encode tree in a formula
             ProblemEncoding pe = new ProblemEncoding(apta, i);
             pe.generateClauses();
-            pe.generateRedundantClauses();
+            // pe.generateRedundantClauses();
             Formula encoding = pe.getEncoding();
     
             // Extract solution with SAT
@@ -41,9 +42,11 @@ public class Main {
             if (solution != null) {
                 // Create the final DFA
                 DFA<String> dfa = Solver.extractNewDFA(solution);
+
+                System.out.println("Consistent: " + compareOnTraces(traces,apta,dfa));
         
                 // OPTIONAL: draw final DFA
-                LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 1);
+                LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 2);
 
                 break;
             }

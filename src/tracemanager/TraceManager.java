@@ -62,7 +62,6 @@ public class TraceManager {
 		return xLogs;
 	}
 
-
 	/**
 	 * Returns a list of all the traces in the logs of the file.
 	 * Each trace is a list of labels (strings).
@@ -84,7 +83,6 @@ public class TraceManager {
 
 		return traces;
 	}
-
 
 	// >>> Public methods
 
@@ -162,5 +160,38 @@ public class TraceManager {
 		}
 
 		return apta;
+	}
+
+		/**
+	 * Static utility to load all .xes files in a directory.
+	 * Every .xes file in this directory (not its subdirs) is added to a list
+	 * of traces.
+	 * @param dir The directory
+	 * @return All the traces
+	 */
+	public static List<List<String>> getTracesFiles(File dir) {
+
+		// Checks
+		if (!dir.exists() || !dir.isDirectory()) {
+			throw new IllegalArgumentException(dir + " is not a valid directory");
+		}
+
+		// Filter the .xes files
+		FileFilter xesFilter = new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.isFile() && file.getName().endsWith(".xes");
+			}
+		};
+
+		List<List<String>> traces = new ArrayList<>();
+
+		// Add all xes files
+		for (File file: dir.listFiles(xesFilter)) {
+			TraceManager tm = new TraceManager(file);
+			traces.addAll(tm.getTraces());
+		}
+
+		return traces;
 	}
 }

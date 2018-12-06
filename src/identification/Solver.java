@@ -32,7 +32,7 @@ public class Solver {
 		// Translate formula in Dimacs format
 		DimacsSaver saver = new DimacsSaver(f);
 		try {
-			boolean ret = saver.saveToDimacsFile(new File("test.cnf"));
+			boolean ret = saver.saveToDimacsFile(new File("dimacsFormula.cnf"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -48,7 +48,7 @@ public class Solver {
         // PrintWriter out = new PrintWriter(System.out,true);
         // CNF filename is given on the command line 
         try {
-            IProblem problem = reader.parseInstance("test.cnf");
+            IProblem problem = reader.parseInstance("dimacsFormula.cnf");
             if (problem.isSatisfiable()) {
                 // reader.decode(problem.model(),out);
                 System.out.println("Satisfiable!");
