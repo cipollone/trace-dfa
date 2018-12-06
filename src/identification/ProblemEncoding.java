@@ -16,11 +16,11 @@ public class ProblemEncoding {
 
 	// >>> Fields
 
-	private Variable[][] x;
+	private EncodingVariable[][] x;
 
-	private Map<String, Variable>[][] y;
+	private Map<String, EncodingVariable>[][] y;
 
-	private Variable[] z;
+	private EncodingVariable[] z;
 
 	private int vertices;
 
@@ -51,9 +51,9 @@ public class ProblemEncoding {
 		this.labels = dcg.allLabels();
 		this.colors = colors;
 
-		this.x = new Variable[vertices][colors];
+		this.x = new EncodingVariable[vertices][colors];
 		this.y = new HashMap[colors][colors];
-		this.z = new Variable[colors];
+		this.z = new EncodingVariable[colors];
 
 		int firstNodeId = apta.getFirstNode().id;
 
@@ -85,7 +85,7 @@ public class ProblemEncoding {
 	 * Returns all the x variables
 	 * @return all the x variables
 	 */
-	public Variable[][] getX() {
+	public EncodingVariable[][] getX() {
 		return x;
 	}
 
@@ -93,7 +93,7 @@ public class ProblemEncoding {
 	 * Returns all the y variables
 	 * @return all the y variables
 	 */
-	public Map<String, Variable>[][] getY() {
+	public Map<String, EncodingVariable>[][] getY() {
 		return y;
 	}
 
@@ -101,7 +101,7 @@ public class ProblemEncoding {
 	 * Returns all the z variables
 	 * @return all the z variables
 	 */
-	public Variable[] getZ() {
+	public EncodingVariable[] getZ() {
 		return z;
 	}
 
@@ -192,14 +192,9 @@ public class ProblemEncoding {
 	 * Each vertex has at most one color
 	 */
 	public void atMostOneColor() {
-		List<Variable> xList = new ArrayList<>();
 		for (int v = 0; v < vertices; v++) {
-			xList.clear();
-			for (int w = 0; w < colors; w++) {
-				xList.add(x[v][w]);
-			}
-			for (int i = 0; i < xList.size(); i++) {
-				for (int j = i + 1; j < xList.size(); j++) {
+			for (int i = 0; i < colors; i++) {
+				for (int j = i + 1; j < colors; j++) {
 					Clause c = new Clause();
 					c.addNegatedVariable(x[v][i]);
 					c.addNegatedVariable(x[v][j]);
@@ -262,68 +257,86 @@ public class ProblemEncoding {
 		}
 	}
 
-
-
-
-
-	public static void test() {
-
-		System.out.println("ProblemEncoding");
-
-		// Build a tree
-		APTA<String> apta = new APTA<>();
-
-		// Sequences to add
-		String[][] sa1 = {
-			{"ciao", "come", "stai", "?"},
-			{"ciao", "come", "stai", "?", "tutto", "bene", "?"},
-			{"ciao", "tutto", "bene", "?"},
-			{"salve", "come", "stai", "?"},
-			{"salve", "come", "va", "?"},
-			{"ciao"},
-			{"salve"}
-		};
-		
-		String[][] sr1 = {
-			{"ciao", "come", "va"},
-			{"salve", "come", "va"},
-			{"salve", "come", "stai"},
-			{"ciao", "come", "stai"},
-			{"bella"},
-			{"bella", "zi"}
-		};
-
-		for (String[] seq: sa1) {
-			List<String> seqL = new ArrayList<>();
-			for (String s: seq) {
-				seqL.add(s);
-			}
-			apta.acceptSequence(seqL);
-		} 
-		for (String[] seq: sr1) {
-			List<String> seqL = new ArrayList<>();
-			for (String s: seq) {
-				seqL.add(s);
-			}
-			apta.rejectSequence(seqL);
-		}
-
-		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
-
-		for (int colors = 4; colors < 5; colors++) {
-			ProblemEncoding pe = new ProblemEncoding(apta,colors);
-			pe.atLeastOneColor();
-			pe.accRejNotSameColor();
-			pe.parentRelationWhenColor();
-			pe.parentAtMostOneColor();
-			pe.atMostOneColor();
-			pe.parentAtLeastOneColor();
-			pe.parentForceVertex();
-			pe.determinConflicts();
-			// System.out.println(pe.getEncoding().toString());
-			// System.out.println(pe.getEncoding().getClauseList().iterator().next());
-			// System.out.println(pe.getEncoding().getClauseList().iterator().next().getAllVariables().iterator().next());
-			System.out.println("Number of clauses: " + pe.getEncoding().getClauseNum() + "\n\n");
-		}
+	/**
+	 * Generate the basic clauses for the encoding
+	 */
+	public void generateClauses() {
+		atLeastOneColor();
+		accRejNotSameColor();
+		parentRelationWhenColor();
+		parentAtMostOneColor();
 	}
+
+	/**
+	 * Generate the redundant clauses
+	 */
+	public void generateRedundantClauses() {
+		atMostOneColor();
+		parentAtLeastOneColor();
+		parentForceVertex();
+		determinConflicts();
+	}
+
+
+
+
+
+	// public static Formula test() {
+
+	// 	System.out.println("ProblemEncoding");
+
+	// 	// Build a tree
+	// 	APTA<String> apta = new APTA<>();
+
+	// 	// Sequences to add
+	// 	String[][] sa1 = {
+	// 		{"ciao", "come", "stai", "?"},
+	// 		{"ciao", "come", "stai", "?", "tutto", "bene", "?"},
+	// 		{"ciao", "tutto", "bene", "?"},
+	// 		{"salve", "come", "stai", "?"},
+	// 		{"salve", "come", "va", "?"},
+	// 		{"ciao"},
+	// 		{"salve"}
+	// 	};
+		
+	// 	String[][] sr1 = {
+	// 		{"ciao", "come", "va"},
+	// 		{"salve", "come", "va"},
+	// 		{"salve", "come", "stai"},
+	// 		{"ciao", "come", "stai"},
+	// 		{"bella"},
+	// 		{"bella", "zi"},
+	// 		{"salve", "come", "butta", "?"},
+	// 		{"salve", "come", "butta"}
+	// 	};
+
+	// 	for (String[] seq: sa1) {
+	// 		List<String> seqL = new ArrayList<>();
+	// 		for (String s: seq) {
+	// 			seqL.add(s);
+	// 		}
+	// 		apta.acceptSequence(seqL);
+	// 	} 
+	// 	for (String[] seq: sr1) {
+	// 		List<String> seqL = new ArrayList<>();
+	// 		for (String s: seq) {
+	// 			seqL.add(s);
+	// 		}
+	// 		apta.rejectSequence(seqL);
+	// 	}
+
+	// 	LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
+
+	// 	ProblemEncoding pe = new ProblemEncoding(apta,3);
+	// 	pe.atLeastOneColor();
+	// 	pe.accRejNotSameColor();
+	// 	pe.parentRelationWhenColor();
+	// 	pe.parentAtMostOneColor();
+	// 	pe.atMostOneColor();
+	// 	pe.parentAtLeastOneColor();
+	// 	pe.parentForceVertex();
+	// 	pe.determinConflicts();
+
+	// 	return pe.getEncoding();
+	// }
 }

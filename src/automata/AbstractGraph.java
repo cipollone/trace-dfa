@@ -112,7 +112,6 @@ public abstract class AbstractGraph<LabelT,
 		return firstNode;
 	}
 
-
 	/**
 	 * Return a new iterator of nodes.
 	 * Iterates the nodes with DepthPreIterator, a depth first visit.

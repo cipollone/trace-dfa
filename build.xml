@@ -48,6 +48,7 @@
 				<pathelement path="${build.dir}/classes"/>
 				<path refid="libs.path"/>
 			</classpath>
+			<arg value="${tracesDir}"/>
 		</java>
 	</target>
 

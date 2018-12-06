@@ -1,81 +1,57 @@
 
 package main;
 
-import java.io.File;
+import automata.*;
+import identification.*;
+import cnf.*;
+import tracemanager.*;
+
+import java.io.*;
 import java.util.*;
-
-import identification.Solver;
-import automata.Automaton;
-
-// for tests
-import automata.APTA;
-import automata.LatexSaver;
 
 
 public class Main {
+
 	public static void main(String args[]) {
 
-		// Testing compareOnTraces()
-		// JUST TESTS BELOW
+        // Build a tree and fill it with traces
+        File fileDir = new File(args[0]);
+        APTA<String> apta = TraceManager.parseTracesFiles(fileDir);
+        List<List<String>> traces = TraceManager.getTracesFiles(fileDir);
 
-		// Build a tree
-		APTA<Character> a1 = new APTA<Character>();
-		APTA<Character> a2 = new APTA<Character>();
-		APTA<Character> a3 = new APTA<Character>();
+        // OPTIONAL: draw APTA
+        LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
 
-		// Sequences to add
-		String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
-		boolean[] ok = { true, false, true, true, true };
+        // Build graph
 
-		// Convert the sequences
-		List<List<Character>> sequencesToAdd = new ArrayList<>();
-		for (int i = 0; i < stringsToAdd.length; ++i) {
-			List<Character> seq = new ArrayList<>();
-			sequencesToAdd.add(seq);
-			for (Character c: stringsToAdd[i].toCharArray()) {
-				seq.add(c);
-			}
-		}
+        // Find initial number of colors
+        int numberOfColors = 1;
 
-		// Strings to parse
-		String[] stringsToParse = {"ciao", "c", "ca", "ciar", "cia", "cc", "d", ""};
+        // Try with increasing number of colors
+        for (int i = numberOfColors; i < 100; i++) {
 
-		// Convert the sequences
-		List<List<Character>> sequencesToParse = new ArrayList<>();
-		for (int i = 0; i < stringsToParse.length; ++i) {
-			List<Character> seq = new ArrayList<>();
-			sequencesToParse.add(seq);
-			for (Character c: stringsToParse[i].toCharArray()) {
-				seq.add(c);
-			}
-		}
+            // Encode tree in a formula
+            ProblemEncoding pe = new ProblemEncoding(apta, i);
+            pe.generateClauses();
+            // pe.generateRedundantClauses();
+            Formula encoding = pe.getEncoding();
+    
+            // Extract solution with SAT
+            List<EncodingVariable> solution = Solver.extractSolution(encoding);
+    
+            if (solution != null) {
+                // Create the final DFA
+                DFA<String> dfa = Solver.extractNewDFA(solution);
 
-		// Test tree expansion
-		for (int i = 0; i < sequencesToAdd.size(); ++i) {
-			if (ok[i]) {
-				a1.acceptSequence(sequencesToAdd.get(i));
-				a2.acceptSequence(sequencesToAdd.get(i));
-				a3.acceptSequence(sequencesToAdd.get(i));
-			} else {
-				a1.rejectSequence(sequencesToAdd.get(i));
-				a2.rejectSequence(sequencesToAdd.get(i));
-				a3.rejectSequence(sequencesToAdd.get(i));
-			}
-		}
+                System.out.println("Consistent: " + compareOnTraces(traces,apta,dfa));
+        
+                // OPTIONAL: draw final DFA
+                LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 2);
 
-		a3.rejectSequence(new ArrayList<Character>());
-
-		System.out.println("Are equal: " +
-				compareOnTraces(sequencesToParse, a1, a2, a3));
-
-		// Show 
-		LatexSaver.saveLatexFile(a1, new File("latex/a1.tex"), 1);
-		LatexSaver.saveLatexFile(a2, new File("latex/a2.tex"), 1);
-		LatexSaver.saveLatexFile(a3, new File("latex/a3.tex"), 1);
-
-		System.out.println();
+                break;
+            }
+        }
 	}
-
 
 	/**
 	 * Test all models on a set of traces.
@@ -107,4 +83,3 @@ public class Main {
 		return true;
 	}
 }
-
