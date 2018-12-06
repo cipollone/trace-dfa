@@ -29,6 +29,8 @@ public class Solver {
 				new ParentVariable("ciao", 1, 1),
 				new ParentVariable("ooo", 1, 2, true),
 				new ParentVariable("o", 2, 0, true),
+				new ParentVariable("e", 2, 0, true),
+				new ParentVariable("ancora", 2, 0, true),
 				new ParentVariable("p", 2, 2, true),
 				new FinalVariable(2, true),
 				new FinalVariable(0, true),
@@ -72,7 +74,7 @@ public class Solver {
 	public static void test() {
 
 		DFA<String> dfa = extractNewDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 1);
+		LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 2);
 
 	}
 }
