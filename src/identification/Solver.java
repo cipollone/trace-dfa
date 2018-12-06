@@ -22,17 +22,14 @@ import org.sat4j.specs.TimeoutException;
  */
 public class Solver {
 
-	
-	// >>> Private functions
-	
+	// >>> Public functions
 	/**
 	 * Extract the true variables from a solution
 	 * @return A list of variables, with boolean member assigned.
 	 */
-	private static List<EncodingVariable> extractSolution() {
+	public static List<EncodingVariable> extractSolution(Formula f) {
 
-		Formula f = ProblemEncoding.test();
-
+		// Translate formula in Dimacs format
 		DimacsSaver saver = new DimacsSaver(f);
 		try {
 			boolean ret = saver.saveToDimacsFile(new File("test.cnf"));
@@ -40,92 +37,57 @@ public class Solver {
 			e.printStackTrace();
 		}
 
-		List<EncodingVariable> varList = null;
+		// Initialize solution and mapping between dimacs format and our Variable format
+		List<EncodingVariable> solution = null;
+        Map<Integer,Variable> mapToVar = saver.idToVarsMap();
 
+        // Find the solution using sat4j
 		ISolver solver = SolverFactory.newDefault();
         solver.setTimeout(3600); // 1 hour timeout
         Reader reader = new DimacsReader(solver);
-        PrintWriter out = new PrintWriter(System.out,true);
+        // PrintWriter out = new PrintWriter(System.out,true);
         // CNF filename is given on the command line 
         try {
             IProblem problem = reader.parseInstance("test.cnf");
             if (problem.isSatisfiable()) {
-                reader.decode(problem.model(),out);
-                System.out.println("Satisfiable !");
-                Map<Integer,Variable> mapToVar = saver.idToVarsMap();
-                for (int i = 0; i < problem.model().length; i++) {
-                	if (problem.model()[i] < 0) {
-                		System.out.println("-" + mapToVar.get(Math.abs(problem.model()[i])));
-                	} else {
-                		System.out.println(mapToVar.get(Math.abs(problem.model()[i])));
-                	}
-                }
-                System.out.println("\n\n");
-                for (int i = 0; i < problem.model().length; i++) {
-                	if (problem.model()[i] < 0) {
-                	} else if (problem.model()[i] >= 0) {
-                		if (mapToVar.get(Math.abs(problem.model()[i])).getIndex().substring(0,1).equals("z")) {
-                			System.out.println(mapToVar.get(problem.model()[i]));
-                		}
-                	}
-                }
-                System.out.println("\n\n");
-                for (int i = 0; i < problem.model().length; i++) {
-                	if (problem.model()[i] < 0) {
-                	} else if (problem.model()[i] >= 0) {
-                		if (mapToVar.get(Math.abs(problem.model()[i])).getIndex().substring(0,1).equals("x")) {
-                			System.out.println(mapToVar.get(problem.model()[i]));
-                		}
-                	}
-                }
-                System.out.println("\n\n");
-                for (int i = 0; i < problem.model().length; i++) {
-                	if (problem.model()[i] < 0) {
-                	} else if (problem.model()[i] >= 0) {
-                		if (mapToVar.get(Math.abs(problem.model()[i])).getIndex().substring(0,1).equals("y")) {
-                			System.out.println(mapToVar.get(problem.model()[i]));
-                		}
-                	}
-                }
-                varList = new ArrayList<>(problem.model().length);
+                // reader.decode(problem.model(),out);
+                System.out.println("Satisfiable!");
+                solution = new ArrayList<>(problem.model().length);
                 for (Integer i : problem.model()) {
                 	if (i > 0) {
                 		EncodingVariable ev = (EncodingVariable)mapToVar.get(i);
                 		ev.assign(true);
-                		varList.add(ev);
+                		solution.add(ev);
                 	}
                 }
             } else {
-                System.out.println("Unsatisfiable !");
+                System.out.println("Unsatisfiable!");
             }
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
+            System.out.println("File not found!");
         } catch (ParseFormatException e) {
-            // TODO Auto-generated catch block
+            System.out.println("Problem during parsing!");
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            System.out.println("Problem during I/O operations");
         } catch (ContradictionException e) {
             System.out.println("Unsatisfiable (trivial)!");
         } catch (TimeoutException e) {
             System.out.println("Timeout, sorry!");      
         }
-        return varList;
+        return solution;
 	}
-	
-
-	// >>> Public functions
 	
 	/**
 	 * Create a DFA from the given solution.
 	 * @return The DFA extracted
 	 */
-	public static DFA<String> extractNewDFA() {
+	public static DFA<String> extractNewDFA(List<EncodingVariable> solution) {
 
 		DFABuilder<String> dfaBuilder = new DFABuilder<String>();
 
 		// Extending the DFA
-		List<EncodingVariable> solution = extractSolution();
-		for (EncodingVariable var: solution) {
+		if (solution == null) {return null;}
+		for (EncodingVariable var : solution) {
 			var.extendDFA(dfaBuilder);
 		}
 
@@ -136,10 +98,10 @@ public class Solver {
 	/**
 	 * Debugging
 	 */
-	public static void test() {
+	// public static void test() {
 
-		DFA<String> dfa = extractNewDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 1);
+	// 	DFA<String> dfa = extractNewDFA();
+	// 	LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 1);
 
-	}
+	// }
 }

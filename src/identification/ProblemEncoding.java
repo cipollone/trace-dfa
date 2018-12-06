@@ -257,82 +257,86 @@ public class ProblemEncoding {
 		}
 	}
 
-
-
-
-
-	public static Formula test() {
-
-		System.out.println("ProblemEncoding");
-
-		// Build a tree
-		APTA<String> apta = new APTA<>();
-
-		// Sequences to add
-		String[][] sa1 = {
-			{"ciao", "come", "stai", "?"},
-			{"ciao", "come", "stai", "?", "tutto", "bene", "?"},
-			{"ciao", "tutto", "bene", "?"},
-			{"salve", "come", "stai", "?"},
-			{"salve", "come", "va", "?"},
-			{"ciao"},
-			{"salve"}
-		};
-		
-		String[][] sr1 = {
-			{"ciao", "come", "va"},
-			{"salve", "come", "va"},
-			{"salve", "come", "stai"},
-			{"ciao", "come", "stai"},
-			{"bella"},
-			{"bella", "zi"},
-			{"salve", "come", "butta", "?"},
-			{"salve", "come", "butta"}
-		};
-
-		for (String[] seq: sa1) {
-			List<String> seqL = new ArrayList<>();
-			for (String s: seq) {
-				seqL.add(s);
-			}
-			apta.acceptSequence(seqL);
-		} 
-		for (String[] seq: sr1) {
-			List<String> seqL = new ArrayList<>();
-			for (String s: seq) {
-				seqL.add(s);
-			}
-			apta.rejectSequence(seqL);
-		}
-
-		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
-
-		// for (int colors = 4; colors < 5; colors++) {
-		// 	ProblemEncoding pe = new ProblemEncoding(apta,colors);
-		// 	pe.atLeastOneColor();
-		// 	pe.accRejNotSameColor();
-		// 	pe.parentRelationWhenColor();
-		// 	pe.parentAtMostOneColor();
-		// 	pe.atMostOneColor();
-		// 	pe.parentAtLeastOneColor();
-		// 	pe.parentForceVertex();
-		// 	pe.determinConflicts();
-		// 	System.out.println(pe.getEncoding().toString());
-		// 	System.out.println(pe.getEncoding().getClauseList().iterator().next());
-		// 	System.out.println(pe.getEncoding().getClauseList().iterator().next().getAllVariables().iterator().next());
-		// 	System.out.println("Number of clauses: " + pe.getEncoding().getClauseNum() + "\n\n");
-		// }
-
-		ProblemEncoding pe = new ProblemEncoding(apta,3);
-		pe.atLeastOneColor();
-		pe.accRejNotSameColor();
-		pe.parentRelationWhenColor();
-		pe.parentAtMostOneColor();
-		pe.atMostOneColor();
-		pe.parentAtLeastOneColor();
-		pe.parentForceVertex();
-		pe.determinConflicts();
-
-		return pe.getEncoding();
+	/**
+	 * Generate the basic clauses for the encoding
+	 */
+	public void generateClauses() {
+		atLeastOneColor();
+		accRejNotSameColor();
+		parentRelationWhenColor();
+		parentAtMostOneColor();
 	}
+
+	/**
+	 * Generate the redundant clauses
+	 */
+	public void generateRedundantClauses() {
+		atMostOneColor();
+		parentAtLeastOneColor();
+		parentForceVertex();
+		determinConflicts();
+	}
+
+
+
+
+
+	// public static Formula test() {
+
+	// 	System.out.println("ProblemEncoding");
+
+	// 	// Build a tree
+	// 	APTA<String> apta = new APTA<>();
+
+	// 	// Sequences to add
+	// 	String[][] sa1 = {
+	// 		{"ciao", "come", "stai", "?"},
+	// 		{"ciao", "come", "stai", "?", "tutto", "bene", "?"},
+	// 		{"ciao", "tutto", "bene", "?"},
+	// 		{"salve", "come", "stai", "?"},
+	// 		{"salve", "come", "va", "?"},
+	// 		{"ciao"},
+	// 		{"salve"}
+	// 	};
+		
+	// 	String[][] sr1 = {
+	// 		{"ciao", "come", "va"},
+	// 		{"salve", "come", "va"},
+	// 		{"salve", "come", "stai"},
+	// 		{"ciao", "come", "stai"},
+	// 		{"bella"},
+	// 		{"bella", "zi"},
+	// 		{"salve", "come", "butta", "?"},
+	// 		{"salve", "come", "butta"}
+	// 	};
+
+	// 	for (String[] seq: sa1) {
+	// 		List<String> seqL = new ArrayList<>();
+	// 		for (String s: seq) {
+	// 			seqL.add(s);
+	// 		}
+	// 		apta.acceptSequence(seqL);
+	// 	} 
+	// 	for (String[] seq: sr1) {
+	// 		List<String> seqL = new ArrayList<>();
+	// 		for (String s: seq) {
+	// 			seqL.add(s);
+	// 		}
+	// 		apta.rejectSequence(seqL);
+	// 	}
+
+	// 	LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
+
+	// 	ProblemEncoding pe = new ProblemEncoding(apta,3);
+	// 	pe.atLeastOneColor();
+	// 	pe.accRejNotSameColor();
+	// 	pe.parentRelationWhenColor();
+	// 	pe.parentAtMostOneColor();
+	// 	pe.atMostOneColor();
+	// 	pe.parentAtLeastOneColor();
+	// 	pe.parentForceVertex();
+	// 	pe.determinConflicts();
+
+	// 	return pe.getEncoding();
+	// }
 }
