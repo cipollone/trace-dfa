@@ -32,39 +32,43 @@ public final class LatexSaver {
 	public static boolean saveLatexFile(LatexPrintableGraph graph,
 			File texFile, float spaceCm) {
 
+		// Package options
+		String classOptions = graph.standaloneClassLatexOptions();
+
 		// Latex file template
 		String latexFilePart1 =
-			"% Minimal LaTeX file for apta specification:\n" +
-			"%   use Tikz graph syntax between the two parts.\n" +
-			"% >> part1\n" +
-			"\\documentclass[tikz]{standalone}\n" +
-			"\\usepackage[T1]{fontenc}\n" +
-			"\\usepackage[utf8]{inputenc}\n" +
-			"\\usetikzlibrary{graphs}\n" +
-			"\\usetikzlibrary{arrows}\n" +
-			"\\usetikzlibrary{quotes}\n" +
-			"\\begin{document}\n" +
-			"\\begin{tikzpicture}[\n" +
-			"			>=stealth',\n" +
-			"			accept/.style={double},\n" +
-			"			reject/.style={fill=gray},\n" +
-			"			backward/.style={bend right},\n" +
-			"			self loop/.style={to path={\n" +
-			"			.. controls +(70:1) and +(110:1) .. (\\tikztotarget) \\tikztonodes}}\n" +
-			"	]\n" +
-			"	\\graph [\n" +
-			"			grow right sep=" + spaceCm + "cm,\n" +
-			"			branch down sep=0.6cm,\n" +
-			"			nodes={draw,circle},\n" +
-			"			edge quotes={font={\\scriptsize}, inner sep=0.3ex, auto, midway}\n" +
-			"			]{\n" +
-			"% >> end of part1\n";
+			"% Minimal LaTeX file for apta specification: \n" +
+			"%   use Tikz graph syntax between the two parts. \n" +
+			"% >> part1 \n" +
+			"\\documentclass" + classOptions + "{standalone} \n" +
+			"\\usepackage[T1]{fontenc} \n" +
+			"\\usepackage[utf8]{inputenc} \n" +
+			"\\usepackage{tikz} \n" +
+			"\\usetikzlibrary{graphs,arrows,quotes,positioning} \n" +
+			"\\standaloneconfig{margin=2em} \n" +
+			"\\begin{document} \n" +
+			"\\centering \n" +
+			"\\begin{tikzpicture}[ \n" +
+			"			>=stealth', \n" +
+			"			accept/.style={double}, \n" +
+			"			reject/.style={fill=gray}, \n" +
+			"			backward/.style={bend right}, \n" +
+			"			self loop/.style={to path={ \n" +
+			"			.. controls +(70:1) and +(110:1) .. (\\tikztotarget) \\tikztonodes}} \n" +
+			"	] \n" +
+			"	\\graph [ \n" +
+			"			grow right sep=2.0cm, \n" +
+			"			branch down sep=0.6cm, \n" +
+			"			nodes={draw,circle}, \n" +
+			"			edge quotes={font={\\scriptsize}, inner sep=0.3ex, auto=right, pos=0.35} \n" +
+			"			]{ \n" +
+			"% >> end of part1 \n";
 		String latexFilePart2 = 
 			"\n" +
-			"% >> part2\n" +
-			"	};\n" +
-			"\\end{tikzpicture}\n" +
-			"\\end{document}\n";
+			"% >> part2 \n" +
+			"	}; \n" +
+			"\\end{tikzpicture} \n" +
+			"% >> end of part2 \n";
 
 		// Write to TeX to file
 		BufferedWriter fileW = null;
@@ -83,6 +87,15 @@ public final class LatexSaver {
 
 			// Write the second part
 			fileW.write(latexFilePart2);
+
+			// Write extra stuff
+			String extraEnv = graph.extraLatexEnv();
+			if (extraEnv != null) {
+				fileW.write(extraEnv);
+			}
+
+			// End of file
+			fileW.write("\n\\end{document}\n");
 
 			// just exception handling below
 		} catch (IOException e) {

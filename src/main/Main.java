@@ -14,43 +14,43 @@ public class Main {
 
 	public static void main(String args[]) {
 
-        // Build a tree and fill it with traces
-        File fileDir = new File(args[0]);
-        APTA<String> apta = TraceManager.parseTracesFiles(fileDir);
-        List<List<String>> traces = TraceManager.getTracesFiles(fileDir);
+		// Build a tree and fill it with traces
+		File fileDir = new File(args[0]);
+		APTA<String> apta = TraceManager.parseTracesFiles(fileDir);
+		List<List<String>> traces = TraceManager.getTracesFiles(fileDir);
 
-        // OPTIONAL: draw APTA
-        LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
+		// OPTIONAL: draw APTA
+		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
 
-        // Build graph
+		// Build graph
 
-        // Find initial number of colors
-        int numberOfColors = 1;
+		// Find initial number of colors
+		int numberOfColors = 1;
 
-        // Try with increasing number of colors
-        for (int i = numberOfColors; i < 100; i++) {
+		// Try with increasing number of colors
+		for (int i = numberOfColors; i < 100; i++) {
 
-            // Encode tree in a formula
-            ProblemEncoding pe = new ProblemEncoding(apta, i);
-            pe.generateClauses();
-            // pe.generateRedundantClauses();
-            Formula encoding = pe.getEncoding();
-    
-            // Extract solution with SAT
-            List<EncodingVariable> solution = Solver.extractSolution(encoding);
-    
-            if (solution != null) {
-                // Create the final DFA
-                DFA<String> dfa = Solver.extractNewDFA(solution);
+				// Encode tree in a formula
+				ProblemEncoding pe = new ProblemEncoding(apta, i);
+				pe.generateClauses();
+				//pe.generateRedundantClauses();
+				Formula encoding = pe.getEncoding();
 
-                System.out.println("Consistent: " + compareOnTraces(traces,apta,dfa));
-        
-                // OPTIONAL: draw final DFA
-                LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 2);
+				// Extract solution with SAT
+				List<EncodingVariable> solution = Solver.extractSolution(encoding);
 
-                break;
-            }
-        }
+				if (solution != null) {
+						// Create the final DFA
+						DFA<String> dfa = Solver.extractNewDFA(solution);
+
+						System.out.println("Consistent: " + compareOnTraces(traces,apta,dfa));
+		
+						// OPTIONAL: draw final DFA
+						LatexSaver.saveLatexFile(dfa, new File("latex/extractedDFA.tex"), 2);
+
+						break;
+				}
+		}
 	}
 
 	/**
@@ -77,7 +77,9 @@ public class Main {
 						return false;
 					}
 				}
+				//System.out.print(" " + result);
 			}
+			//System.out.print(" " + trace + "\n");
 		}
 
 		return true;

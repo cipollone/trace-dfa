@@ -17,6 +17,11 @@ public class DFA<LabelT>
 	
 	// >>> Fields
 
+	/* Auxiliary variable, used for printing a legend of the labels.
+	 * It's used with (short_label, long_label) couples. */
+	private Map<Integer,String> legendMap = null;
+
+
 	// >>> Private functions
 	
 	/**
@@ -43,10 +48,19 @@ public class DFA<LabelT>
 		DFA<String> simpleDFA = new DFA<>();  // Create a new DFA
 		Map<DNode<LabelT>, DNode<String>> nodesMap =  // Old -> new map
 				new HashMap<>();
+
+		// Optional: using ints instead of true labels
+		int nextIntLabel = 0;
+		boolean usingLegend = false;
+		if (legendMap != null) {
+			legendMap.clear();
+			usingLegend = true;
+		}
 	
 		// Create all nodes in advance
 		for (DNode<LabelT> node: this) {
-			nodesMap.put(node, new DNode<String>(node.id, node.getFinalFlag()));
+			DNode<String> newNode = new DNode<String>(node.id, node.getFinalFlag());
+			nodesMap.put(node, newNode);
 		}
 
 		// Set initial state
@@ -69,11 +83,21 @@ public class DFA<LabelT>
 				}
 				mergedArcs.put(newChild, mergedArc);
 			}
-
+			
 			// Add the merged arcs to the new node
 			for (DNode<String> newChild: mergedArcs.keySet()) {
+				String finalLabel = mergedArcs.get(newChild);
+
+				// Abbreviation?
+				if (usingLegend) {
+					legendMap.put(nextIntLabel, finalLabel);
+					finalLabel = Integer.toString(nextIntLabel);
+					++nextIntLabel;
+				}
+
+				// Add the arc
 				DNode<String> newNode = nodesMap.get(node);
-				newNode.addArc(mergedArcs.get(newChild), newChild);
+				newNode.addArc(finalLabel, newChild);
 			}
 		}
 
@@ -220,6 +244,7 @@ public class DFA<LabelT>
 	public String getLatexGraphRepresentation() {
 
 		// Simplify the graph
+		legendMap = new HashMap<>(); // Shortening labels
 		DFA<String> simpleDFA = simpleArcsRepresentation();
 
 		// Data structures
@@ -234,6 +259,50 @@ public class DFA<LabelT>
 		simpleDFA.buildLatexRepresentation2(stringB, loops);
 
 		return stringB.toString();
+	}
+
+
+	/**
+	 * Extra latex code used for printing the legend.
+	 * A new environment in which the legend of the labels is printed
+	 * @return The legend as Latex code
+	 */
+	@Override
+	public String extraLatexEnv() {
+
+		// Open
+		StringBuilder stringB = new StringBuilder();
+		stringB.append("\n");
+		stringB.append("\\textbf{Transitions}\n");
+		stringB.append("\\begin{flushleft}\n");
+		stringB.append("\\begin{description}\n");
+		
+		// Sorted legend
+		List<Integer> shortLabels = new ArrayList<Integer>(legendMap.keySet());
+		Collections.sort(shortLabels);
+
+		for (Integer shortLabel: shortLabels) {
+			String longLabel = legendMap.get(shortLabel);
+			stringB.append("\t\\item [" + shortLabel + "] " + longLabel + "\n");
+		}
+		
+		// Close
+		stringB.append("\\end{description}\n");
+		stringB.append("\\end{flushleft}\n");
+
+		return stringB.toString();
+	}
+
+
+	/**
+	 * This function is used to pass options to standalone document class.
+	 * Return the empty string to pass nothing. Otherwise return a
+	 * list of options like: [varwidth]
+	 * @return Latex options for standalone document class
+	 */
+	@Override
+	public String standaloneClassLatexOptions() {
+		return "[varwidth=40em]"; // NOTE: assuming the DFA is small enough
 	}
 
 

@@ -140,6 +140,26 @@ public class APTA<LabelT>
 
 
 	/**
+	 * Doing nothing. No extra latex code needed.
+	 * @return null
+	 */
+	@Override
+	public String extraLatexEnv() {
+		return null;
+	}
+
+
+	/**
+	 * No further options.
+	 * @return Latex options for standalone document class
+	 */
+	@Override
+	public String standaloneClassLatexOptions() {
+		return "";
+	}
+	
+
+	/**
 	 * Parse the sequence with this tree.
 	 * @param sequence A list of labels
 	 * @return The result of parsing

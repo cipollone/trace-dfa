@@ -26,4 +26,21 @@ public interface LatexPrintableGraph {
 	 * @return The string for this graph
 	 */
 	public String getLatexGraphRepresentation();
+
+
+	/**
+	 * This function is used for other Latex code. 
+	 * The string returned will be pasted inside the document body.
+	 * @return Latex environment(s) or null if you don't want to use this feature
+	 */
+	public String extraLatexEnv();
+
+
+	/**
+	 * This function is used to pass options to standalone document class.
+	 * Return the empty string to pass nothing. Otherwise return a
+	 * list of options like: [varwidth]
+	 * @return Latex options for standalone document class
+	 */
+	public String standaloneClassLatexOptions();
 }
