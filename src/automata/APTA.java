@@ -290,7 +290,20 @@ public class APTA<LabelT>
 	 * Possible choices: accepting, rejecting, or unknown response.
 	 */
 	public enum Response {
-		ACCEPT, REJECT, UNKNOWN
+		ACCEPT, REJECT, UNKNOWN;
+
+		@Override
+		public String toString() {
+			switch (this) {
+				case ACCEPT:
+					return "ACC";
+				case REJECT:
+					return "REJ";
+				case UNKNOWN:
+					return "UNK";
+			}
+			return "UNK";
+		}
 	}
 
 
