@@ -150,6 +150,11 @@ public class TraceManager {
 			}
 		};
 
+		// Check some traces exist
+		if (dir.listFiles(xesFilter).length == 0) {
+			throw new RuntimeException("No .xes files found");
+		}
+
 		// New APTA
 		APTA<String> apta = new APTA<>();
 

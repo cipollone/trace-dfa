@@ -5,6 +5,9 @@
 /latex/
 /traces/
 
+# Produced by the program
+/*.cnf
+
 # Java
 *.class
 
