@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import java.io.File;
 
 import automata.*;
+import util.*;
 
 
 /**
@@ -20,15 +21,15 @@ import automata.*;
  * @see automata.APTA
  */
 public class ConstraintsGraph
-		implements Iterable<ConstraintsGraph.CNode> {
+		implements Iterable<ConstraintsGraph.CNode>, LatexPrintableGraph {
 
 	// >>> Fields
 	
 	/* Domain */
 	private final APTA<String> apta;
 
-	/* The first node */
-	private final CNode firstNode;
+	/* The first node (any) */
+	private CNode firstNode = null;
 
 	/* Positive/negative nodes */
 	private Set<CNode> positiveNodes = null;
@@ -39,14 +40,17 @@ public class ConstraintsGraph
 
 	/**
 	 * Creates the constraints graph from the apta.
+	 * If the parameter is set to true, the graph built contains both the direct
+	 * and indirect constraints. With false, just the indirect constraints
+	 * are created (the minimal set).
+	 * @param full Complete or minimal graph
 	 */
-	public void createFromAPTA() {
+	private void createFromAPTA(boolean full) {
 
 		// Clone all nodes
 		Set<CNode> nodes = new HashSet<CNode>();
 		for (APTA.ANode<String> n: apta) {
-			CNode cn = (n.id == firstNode.id) ? firstNode : new CNode(n);
-			nodes.add(cn);
+			nodes.add(new CNode(n));
 		}
 
 		// Save positive and negative
@@ -57,17 +61,116 @@ public class ConstraintsGraph
 				.filter(n -> n.response == APTA.Response.REJECT)
 				.collect(Collectors.toSet());
 
+		// Set the initial node
+		firstNode = positiveNodes.iterator().next(); // NOTE: assuming at least one
 
-		// TODO: just testing for now
-		CNode last = null;
-		for (CNode n: nodes) {
-			if (last != null) {
-				n.addArc(last);
+		// Create all direct constraints
+		for (CNode nP: positiveNodes) {
+			for (CNode nN: negativeNodes) {
+				nP.addArc(nN);
 			}
-			last = n;
 		}
-		last.addArc(last);
+		if (!full) { return; }
 
+		// TODO: Indirect constraints
+
+		// TODO: Is the complete graph always connected?
+	}
+
+
+	/**
+	 * Returns the Latex graph representation.
+	 * Depth first visit of the graph. First part of the helper function:
+	 * just a spanning tree is printed.
+	 * @param stringB The string representation: modified in place,initally empty
+	 * @param node The current node: initially root
+	 * @param visited A set of visited nodes: initially empty
+	 * @param parent The parent node, initially null.
+	 * @param loops Arcs not printed because they form loops, initially empty.
+	 * @return Latex code
+	 * @see ConstraintsGraph#getLatexGraphRepresentation
+	 */
+	public void buildLatexRepresentation1(StringBuilder stringB, CNode node,
+			Set<CNode> visited, CNode parent, Set<Pair<CNode,CNode>> loops) {
+
+		// Already visited?
+		if (visited.contains(node)) {
+			if (!loops.contains(new Pair<>(node, parent))) { // Note the reversed order
+				loops.add(new Pair<>(parent, node));
+			}
+			return;
+		} else {
+			visited.add(node);
+		}
+
+		// Add the node id in a new line
+		stringB.append("\n\t\t");
+		stringB.append(node.id).append(' ');
+
+		// Add the response
+		switch (node.response) {
+			case ACCEPT:
+				stringB.append("[accept] ");
+				break;
+			case REJECT:
+				stringB.append("[reject] ");
+				break;
+			default:
+		}
+
+		// All other arcs
+		Set<CNode> arcs = new HashSet<>();
+		arcs.addAll(node.getArcs());
+		arcs.remove(parent);
+
+		// Base case: no children
+		if (arcs.isEmpty()) { return; }
+
+		// Recursion
+		stringB.append("-- {");
+		int i = arcs.size();
+		for (CNode n: arcs) {
+			buildLatexRepresentation1(stringB, n, visited, node, loops);
+			--i;
+			char sep = (i > 0) ? ',' : '}';
+			stringB.append(sep);
+		}
+	}
+
+
+	/**
+	 * Build LaTex tree representation.
+	 * Second part of the helper function: the loops are printed.
+	 * @param stringB The string representation, result is appended.
+	 * @param loops Arcs to print.
+	 * @see DFA#getLatexGraphRepresentation
+	 */
+	private void buildLatexRepresentation2(StringBuilder stringB,
+			Set<Pair<CNode,CNode>> loops) {
+
+		stringB.append(",\n");
+
+		// Writing edges one by one.
+		for (Pair<CNode,CNode> arc: loops) {
+
+			// If this is a self loop: impossible for this type of graph
+			if (arc.left == arc.right) {
+				stringB.append("\t\t").
+						append(arc.left.id).
+						append(" -- [clear >, self loop] ").
+						append(arc.left.id).
+						append(",\n");
+			}
+			// Else, we go to some previous node
+			else {
+				stringB.append("\t\t").
+						append(arc.left.id).
+						append(" -- [clear >, backward] ").
+						append(arc.right.id).
+						append(",\n");
+			}
+		}
+		stringB.delete(stringB.length()-2, stringB.length());
 	}
 
 
@@ -85,8 +188,8 @@ public class ConstraintsGraph
 
 		// Initialization
 		this.apta = apta;
-		this.firstNode = new CNode(apta.getFirstNode());
-		createFromAPTA();
+
+		createFromAPTA(true);
 	}
 
 
@@ -115,6 +218,49 @@ public class ConstraintsGraph
 	@Override
 	public Iterator<CNode> iterator() {
 		return new DepthPreIterator();
+	}
+
+
+	/**
+	 * Returns the Latex graph representation
+	 * NOTE: this method assumes as iterator a depth-first pre order visit of
+	 * nodes.
+	 * @return Latex code
+	 * @see LatexPrintableGraph
+	 */
+	@Override
+	public String getLatexGraphRepresentation() {
+
+		// Structures
+		StringBuilder stringB = new StringBuilder();
+		Set<CNode> visited = new HashSet<>();
+		Set<Pair<CNode,CNode>> loops = new HashSet<>();
+
+		// Call
+		buildLatexRepresentation1(stringB, firstNode, visited, null, loops);
+		buildLatexRepresentation2(stringB, loops);
+
+		return stringB.toString();
+	}
+
+
+	/**
+	 * Nothing needed here.
+	 * @see LatexPrintableGraph
+	 */
+	@Override
+	public String extraLatexEnv() {
+		return null;
+	}
+
+
+	/**
+	 * Nothing needed here.
+	 * @see LatexPrintableGraph
+	 */
+	@Override
+	public String standaloneClassLatexOptions() {
+		return "";
 	}
 
 
@@ -151,14 +297,14 @@ public class ConstraintsGraph
 		// Create a constraint graph
 		ConstraintsGraph graph = new ConstraintsGraph(tree);
 
-		// Testing iterator
-		for (CNode n: graph) {
-			System.out.println(n);
-		}
+		// Testing iterator: ok
 
 		// Testing set of states
 		System.out.println(graph.getAcceptingNodes());
 		System.out.println(graph.getRejectingNodes());
+
+		// Testing Latex
+		LatexSaver.saveLatexFile(graph, new File("latex/graph_c.tex"), 1);
 
 	}
 
@@ -224,6 +370,7 @@ public class ConstraintsGraph
 	/**
 	 * Each node of this graph.
 	 * Each node is identified by an id.
+	 * Only the outer class can modify or make new nodes.
 	 */
 	public static class CNode {
 
@@ -239,44 +386,25 @@ public class ConstraintsGraph
 		private final Set<CNode> arcs = new HashSet<CNode>();
 
 
-		// >>> Public functions
-		
+		// >>> Private functions
+
 		/**
 		 * Constructor.
 		 * The only way of making a new node is to copy an existing APTA node
 		 * @param node An existing APTA node to copy
 		 */
-		public CNode(APTA.ANode<String> node) {
+		private CNode(APTA.ANode<String> node) {
 			this.id = node.id;
 			this.response = node.getResponse();
 		}
 		
 		
 		/**
-		 * Returns whether node is connected to this node.
-		 * @param node The node to find
-		 * @return Does this arc exist?
-		 */
-		public boolean hasArc(CNode node) {
-			return arcs.contains(node);
-		}
-
-
-		/**
-		 * Returns the set of nodes connected to this node.
-		 * @return An unmodifiable set of connected nodes
-		 */
-		public Set<CNode> getArcs() {
-			return Collections.unmodifiableSet(arcs);
-		}
-
-
-		/**
 		 * Disconnects two nodes.
 		 * @param node The node to disconnect.
 		 * @return true if the node has been removed, false if there was no node.
 		 */
-		public boolean removeArc(CNode node) {
+		private boolean removeArc(CNode node) {
 
 			// Checks
 			if (node == null) {
@@ -295,7 +423,7 @@ public class ConstraintsGraph
 		 * Connects two nodes.
 		 * @param node The node to connect
 		 */
-		public void addArc(CNode node) {
+		private void addArc(CNode node) {
 
 			// Checks
 			if (node == null) {
@@ -304,6 +432,27 @@ public class ConstraintsGraph
 
 			arcs.add(node);
 			node.arcs.add(this);
+		}
+
+
+		// >>> Public functions
+		
+		/**
+		 * Returns whether node is connected to this node.
+		 * @param node The node to find
+		 * @return Does this arc exist?
+		 */
+		public boolean hasArc(CNode node) {
+			return arcs.contains(node);
+		}
+
+
+		/**
+		 * Returns the set of nodes connected to this node.
+		 * @return An unmodifiable set of connected nodes
+		 */
+		public Set<CNode> getArcs() {
+			return Collections.unmodifiableSet(arcs);
 		}
 
 
