@@ -34,7 +34,7 @@
 		</javadoc>
 	</target>
 
-	<target name="compile">
+	<target name="build">
 		<mkdir dir="${build.dir}/classes"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}/classes"
 			includeantruntime="false" debug="${debugging}"
@@ -44,7 +44,7 @@
 		</javac>
 	</target>
 
-	<target name="run" depends="compile">
+	<target name="run" depends="build">
 		<java classname="main.Main">
 			<classpath>
 				<pathelement path="${build.dir}/classes"/>

@@ -35,6 +35,9 @@ public class ConstraintsGraph
 	private Set<CNode> positiveNodes = null;
 	private Set<CNode> negativeNodes = null;
 
+	/* Set of all labels: just an useful hint for users of this class */
+	private Set<String> labels = new HashSet<String>();
+
 
 	// >>> Private functions
 
@@ -90,7 +93,7 @@ public class ConstraintsGraph
 	 * @return Latex code
 	 * @see ConstraintsGraph#getLatexGraphRepresentation
 	 */
-	public void buildLatexRepresentation1(StringBuilder stringB, CNode node,
+	private void buildLatexRepresentation1(StringBuilder stringB, CNode node,
 			Set<CNode> visited, CNode parent, Set<Pair<CNode,CNode>> loops) {
 
 		// Already visited?
@@ -190,6 +193,11 @@ public class ConstraintsGraph
 		this.apta = apta;
 
 		createFromAPTA(true);
+
+		// Counts
+		for (APTA.ANode<String> node: apta) {
+			labels.addAll(node.getLabels());
+		}
 	}
 
 
@@ -218,6 +226,36 @@ public class ConstraintsGraph
 	@Override
 	public Iterator<CNode> iterator() {
 		return new DepthPreIterator();
+	}
+
+
+	/**
+	 * Accumulates and returns the set of all edges in the graph.
+	 * Every edge is a constraint: the two nodes must have different colors.
+	 * @return Edges: pairs of nodes
+	 */
+	public Set<Pair<CNode,CNode>> constraints() {
+
+		// Add all arcs once
+		Set<Pair<CNode,CNode>> edges = new HashSet<>();
+		for (CNode node: this) {
+			for (CNode child: node.getArcs()) {
+				if (!edges.contains(new Pair<>(child, node))) {
+					edges.add(new Pair<>(node, child));
+				}
+			}
+		}
+
+		return edges;
+	}
+
+
+	/**
+	 * Returns the set of all labels in the input APTA.
+	 * @return The set of labels
+	 */
+	public Set<String> allLabels() {
+		return Collections.unmodifiableSet(labels);
 	}
 
 
@@ -297,14 +335,15 @@ public class ConstraintsGraph
 		// Create a constraint graph
 		ConstraintsGraph graph = new ConstraintsGraph(tree);
 
+		// Save in Latex
+		LatexSaver.saveLatexFile(graph, new File("latex/graph_c.tex"), 1);
+
 		// Testing iterator: ok
 
-		// Testing set of states
-		System.out.println(graph.getAcceptingNodes());
-		System.out.println(graph.getRejectingNodes());
-
-		// Testing Latex
-		LatexSaver.saveLatexFile(graph, new File("latex/graph_c.tex"), 1);
+		// Testing set of states: ok
+		
+		// Testing the set of edges
+		System.out.println(graph.constraints());
 
 	}
 
