@@ -28,8 +28,8 @@ public class ConstraintsGraph
 	/* Domain */
 	private final APTA<String> apta;
 
-	/* The first node (any) */
-	private CNode firstNode = null;
+	/* The first node (any) for each connected part of the graph */
+	private Set<CNode> firstNodes = null;
 
 	/* Positive/negative nodes */
 	private Set<CNode> positiveNodes = null;
@@ -66,9 +66,6 @@ public class ConstraintsGraph
 				.filter(n -> n.response == APTA.Response.REJECT)
 				.collect(Collectors.toSet());
 
-		// Set the initial node
-		firstNode = positiveNodes.iterator().next(); // NOTE: assuming at least one
-
 		// Create all direct constraints
 		for (CNode nP: positiveNodes) {
 			for (CNode nN: negativeNodes) {
@@ -98,8 +95,7 @@ public class ConstraintsGraph
 
 		// Detect and save connected components (because the whole graph is not
 		// connected)
-
-		// TODO
+		firstNodes = connectedComponents(nodes.values());
 	}
 
 
@@ -164,6 +160,39 @@ public class ConstraintsGraph
 		merged.get(n1).add(n2);
 		merged.get(n2).add(n1);
 		return true;
+	}
+
+
+	/**
+	 * Finds and returns one node for each connected part of the graph.
+	 * Storing just the returned set of nodes allows to keep the whole graph
+	 * in memory.
+	 * @param nodes The collection of all nodes (connected or not).
+	 * @return A set of nodes, one for each connected component.
+	 */
+	private Set<CNode> connectedComponents(Collection<CNode> nodes) {
+
+		// Queue of nodes to reach
+		Set<CNode> nodesToReach = new HashSet<>(nodes);
+		Set<CNode> minimalSetOfNodes = new HashSet<>();
+
+		// Until every node has been reached
+		while (!nodesToReach.isEmpty()) {
+
+			// Start from the next node to reach
+			CNode nextFirstNode = nodesToReach.iterator().next();
+			Iterator<CNode> it = new DepthPreIterator(nextFirstNode);
+
+			// Mark the connected nodes as reached
+			while (it.hasNext()) {
+				nodesToReach.remove(it.next());
+			}
+
+			// Save the first node
+			minimalSetOfNodes.add(nextFirstNode);
+		}
+
+		return minimalSetOfNodes;
 	}
 
 
@@ -237,7 +266,7 @@ public class ConstraintsGraph
 	private void buildLatexRepresentation2(StringBuilder stringB,
 			Set<Pair<CNode,CNode>> loops) {
 
-		stringB.append(",\n");
+		stringB.append("\n");
 
 		// Writing edges one by one.
 		for (Pair<CNode,CNode> arc: loops) {
@@ -312,7 +341,7 @@ public class ConstraintsGraph
 	 */
 	@Override
 	public Iterator<CNode> iterator() {
-		return new DepthPreIterator();
+		return new CompleteGraphIterator();
 	}
 
 
@@ -357,8 +386,6 @@ public class ConstraintsGraph
 
 	/**
 	 * Returns the Latex graph representation
-	 * NOTE: this method assumes as iterator a depth-first pre order visit of
-	 * nodes.
 	 * @return Latex code
 	 * @see LatexPrintableGraph
 	 */
@@ -371,7 +398,10 @@ public class ConstraintsGraph
 		Set<Pair<CNode,CNode>> loops = new HashSet<>();
 
 		// Call
-		buildLatexRepresentation1(stringB, firstNode, visited, null, loops);
+		for (CNode firstNode: firstNodes) {
+			buildLatexRepresentation1(stringB, firstNode, visited, null, loops);
+			stringB.append(',');
+		}
 		buildLatexRepresentation2(stringB, loops);
 
 		return stringB.toString();
@@ -407,6 +437,7 @@ public class ConstraintsGraph
 		APTA<String> tree = new APTA<>();
 
 		//String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
+		//String[] stringsToAdd = { "aaa", "baa", "ba"};
 		String[] stringsToAdd = { "abaa", "abb", "a", "b", "bb"};
 		boolean[] ok = { true, false, true, false, true };
 
@@ -435,21 +466,61 @@ public class ConstraintsGraph
 		// Save in Latex
 		LatexSaver.saveLatexFile(graph, new File("latex/graph_c.tex"), 1);
 
-		// Testing iterator: ok
-
 		// Testing set of states: ok
 		
 		// Testing the set of edges
-		System.out.println(graph.constraints());
+		System.out.println(graph.constraints().size() + " constraints");
 
+		// Testing iterators
+		int nodes = 0;
+		for (CNode n: graph) {
+			nodes++;
+		}
+		System.out.println(nodes + " nodes");
 	}
 
 
 	// >>> Nested classes
+	
+	/**
+	 * Iterator for all nodes in this graph.
+	 * Returns all nodes, even disconnected parts.
+	 */
+	private class CompleteGraphIterator implements Iterator<CNode> {
+
+		/* Iterator for all components  */
+		private Iterator<CNode> partsIt = firstNodes.iterator();
+
+		/* Iterator within each connected component */
+		private Iterator<CNode> connectedPartIt = null;
+
+		/* Update iterators */
+		private void moveToNext() {
+			if (partsIt.hasNext()) {
+				if (connectedPartIt == null || !connectedPartIt.hasNext()) {
+					connectedPartIt = new DepthPreIterator(partsIt.next());
+				}
+			}
+		}
+
+		@Override
+		public boolean hasNext() {
+			moveToNext();
+			return connectedPartIt.hasNext();
+		}
+
+		@Override
+		public CNode next() {
+			moveToNext();
+			return connectedPartIt.next();
+		}
+	}
+
 
 	/**
-	 * Iterator class for depth-visit of the graph.
+	 * Iterator class for depth-visit of a connected graph.
 	 * Nodes are returned in pre-order.
+	 * Just the connected component of the given node is returned.
 	 */
 	private class DepthPreIterator implements Iterator<CNode> {
 
@@ -461,7 +532,7 @@ public class ConstraintsGraph
 
 
 		/* Constructor */
-		public DepthPreIterator() {
+		public DepthPreIterator(CNode firstNode) {
 			nodesLeft.add(firstNode);
 		}
 
