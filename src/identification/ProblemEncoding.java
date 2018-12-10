@@ -30,25 +30,26 @@ public class ProblemEncoding {
 
 	private Formula encoding = new Formula();
 
-	private DirectConstraintsGraph dcg;
+	private ConstraintsGraph cg;
 
 	private APTA<String> apta;
 
 	// >>> Public functions
 
 	/**
-	 * Constructor: sets the apta, the corresponding dcg and the number of colors; initializes the variables x, y and z
+	 * Constructor: sets the apta, the corresponding cg and the number of colors; initializes the variables x, y and z
 	 * @param apta The apta
+	 * @param cg The constraints graph derived from the apta
 	 * @param colors The total number of colors
 	 */
 	@SuppressWarnings({"rawtypes","unchecked"})
-	public ProblemEncoding(APTA<String> apta, int colors) {
+	public ProblemEncoding(APTA<String> apta, ConstraintsGraph cg, int colors) {
 		
-		this.dcg = new DirectConstraintsGraph(apta);
+		this.cg = cg;
 
 		this.apta = apta;
-		this.vertices = dcg.numberOfStates();
-		this.labels = dcg.allLabels();
+		this.vertices = cg.numberOfInputNodes();
+		this.labels = cg.allLabels();
 		this.colors = colors;
 
 		this.x = new EncodingVariable[vertices][colors];
@@ -131,15 +132,15 @@ public class ProblemEncoding {
 	 */
 	public void accRejNotSameColor() {
 		for (int i = 0; i < colors; i++) {
-			for (Integer v : dcg.acceptingStates()) {
+			for (ConstraintsGraph.CNode v : cg.getAcceptingNodes()) {
 				Clause c = new Clause();
-				c.addNegatedVariable(x[v][i]);
+				c.addNegatedVariable(x[v.id][i]);
 				c.addPositiveVariable(z[i]);
 				encoding.addClause(c);
 			}
-			for (Integer w : dcg.rejectingStates()) {
+			for (ConstraintsGraph.CNode w : cg.getRejectingNodes()) {
 				Clause c = new Clause();
-				c.addNegatedVariable(x[w][i]);
+				c.addNegatedVariable(x[w.id][i]);
 				c.addNegatedVariable(z[i]);
 				encoding.addClause(c);
 			}
@@ -169,18 +170,13 @@ public class ProblemEncoding {
 	 * Each parent relation can target at most one color
 	 */
 	public void parentAtMostOneColor() {
-		List<Variable> yList = new ArrayList<>();
 		for (String s : labels) {
 			for (int i = 0; i < colors; i++) {
-				yList.clear();
-				for (int w = 0; w < colors; w++) {
-					yList.add(y[i][w].get(s));
-				}
-				for (int j = 0; j < yList.size(); j++) {
-					for (int h = j + 1; h < yList.size(); h++) {
+				for (int h = 0; h < colors; h++) {
+					for (int j = h + 1; j < colors; j++) {
 						Clause c = new Clause();
-						c.addNegatedVariable(y[i][j].get(s));
 						c.addNegatedVariable(y[i][h].get(s));
+						c.addNegatedVariable(y[i][j].get(s));
 						encoding.addClause(c);
 					}
 				}
@@ -242,16 +238,16 @@ public class ProblemEncoding {
 	 * All determinization conflicts explicitly added as clauses
 	 */
 	public void determinConflicts() {
-		for (Pair<Integer,Integer> p : dcg.directConstraints()) {
-			int v = p.left;
-			int w = p.right;
-			if (w > v) {
+		for (Pair<ConstraintsGraph.CNode,ConstraintsGraph.CNode> p : cg.constraints()) {
+			ConstraintsGraph.CNode v = p.left;
+			ConstraintsGraph.CNode w = p.right;
+			if (w.id > v.id) {
 				continue;
 			}
 			for (int i = 0; i < colors; i++) {
 				Clause c = new Clause();
-				c.addNegatedVariable(x[v][i]);
-				c.addNegatedVariable(x[w][i]);
+				c.addNegatedVariable(x[v.id][i]);
+				c.addNegatedVariable(x[w.id][i]);
 				encoding.addClause(c);
 			}
 		}
@@ -276,67 +272,5 @@ public class ProblemEncoding {
 		parentForceVertex();
 		determinConflicts();
 	}
-
-
-
-
-
-	// public static Formula test() {
-
-	// 	System.out.println("ProblemEncoding");
-
-	// 	// Build a tree
-	// 	APTA<String> apta = new APTA<>();
-
-	// 	// Sequences to add
-	// 	String[][] sa1 = {
-	// 		{"ciao", "come", "stai", "?"},
-	// 		{"ciao", "come", "stai", "?", "tutto", "bene", "?"},
-	// 		{"ciao", "tutto", "bene", "?"},
-	// 		{"salve", "come", "stai", "?"},
-	// 		{"salve", "come", "va", "?"},
-	// 		{"ciao"},
-	// 		{"salve"}
-	// 	};
-		
-	// 	String[][] sr1 = {
-	// 		{"ciao", "come", "va"},
-	// 		{"salve", "come", "va"},
-	// 		{"salve", "come", "stai"},
-	// 		{"ciao", "come", "stai"},
-	// 		{"bella"},
-	// 		{"bella", "zi"},
-	// 		{"salve", "come", "butta", "?"},
-	// 		{"salve", "come", "butta"}
-	// 	};
-
-	// 	for (String[] seq: sa1) {
-	// 		List<String> seqL = new ArrayList<>();
-	// 		for (String s: seq) {
-	// 			seqL.add(s);
-	// 		}
-	// 		apta.acceptSequence(seqL);
-	// 	} 
-	// 	for (String[] seq: sr1) {
-	// 		List<String> seqL = new ArrayList<>();
-	// 		for (String s: seq) {
-	// 			seqL.add(s);
-	// 		}
-	// 		apta.rejectSequence(seqL);
-	// 	}
-
-	// 	LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
-
-	// 	ProblemEncoding pe = new ProblemEncoding(apta,3);
-	// 	pe.atLeastOneColor();
-	// 	pe.accRejNotSameColor();
-	// 	pe.parentRelationWhenColor();
-	// 	pe.parentAtMostOneColor();
-	// 	pe.atMostOneColor();
-	// 	pe.parentAtLeastOneColor();
-	// 	pe.parentForceVertex();
-	// 	pe.determinConflicts();
-
-	// 	return pe.getEncoding();
-	// }
 }
+

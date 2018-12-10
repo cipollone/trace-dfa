@@ -54,18 +54,21 @@ public class Main {
 		// OPTIONAL: draw APTA
 		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
 
+        // Build constraints graph
+        ConstraintsGraph cg = new ConstraintsGraph(apta);
+
 		// Build graph
 		DFA<String> dfa = null;
 
-		// Find initial number of colors
-		int numberOfColors = 1;
+		// Find initial number of colors (clique)
+		int numberOfColors = cg.getClique().size();
 		int maxColors = 100; // made up
 
 		// Try with increasing number of colors
 		for (int i = numberOfColors; i < maxColors; i++) {
 
 				// Encode tree in a formula
-				ProblemEncoding pe = new ProblemEncoding(apta, i);
+				ProblemEncoding pe = new ProblemEncoding(apta, cg, i);
 				pe.generateClauses();
 				//pe.generateRedundantClauses();
 				Formula encoding = pe.getEncoding();

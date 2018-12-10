@@ -302,6 +302,127 @@ public class ConstraintsGraph
 	}
 
 
+		/**
+	* Return a set of nodes forming a clique in the ConstraintsGraph
+	* @return A clique found in ConstrainstGraph
+	*/
+	public Set<CNode> getClique() {
+		Set<CNode> acceptableClique = new HashSet<>();
+
+		int maxDegree = 0;
+		int degree = 0;
+		CNode nodeMaxDegree = null;
+
+		// Find node with the highest degree
+		for (CNode n : getAcceptingNodes()) {
+			for (CNode a : n.getArcs()) {
+				if (getAcceptingNodes().contains(a)) {
+					degree++;
+				}
+			}
+			if (degree > maxDegree) {
+				maxDegree = degree;
+				nodeMaxDegree = n;
+			}
+			degree = 0;
+		}
+
+		// Add it to the clique
+		acceptableClique.add(nodeMaxDegree);
+
+		// Search between its neighbors to find the other nodes in the clique
+		while (nodeMaxDegree != null) {
+			nodeMaxDegree = getHighestDegreeNeighbor(nodeMaxDegree, acceptableClique, true);
+			if (nodeMaxDegree != null) {
+				acceptableClique.add(nodeMaxDegree);
+			}
+		}
+
+		Set<CNode> rejectableClique = new HashSet<>();
+
+		maxDegree = 0;
+		degree = 0;
+		nodeMaxDegree = null;
+
+		// Find node with the highest degree
+		for (CNode n : getRejectingNodes()) {
+			for (CNode a : n.getArcs()) {
+				if (getRejectingNodes().contains(a)) {
+					degree++;
+				}
+			}
+			if (degree > maxDegree) {
+				maxDegree = degree;
+				nodeMaxDegree = n;
+			}
+			degree = 0;
+		}
+
+		// Add it to the clique
+		rejectableClique.add(nodeMaxDegree);
+
+		// Search between its neighbors to find the other nodes in the clique
+		while (nodeMaxDegree != null) {
+			nodeMaxDegree = getHighestDegreeNeighbor(nodeMaxDegree, rejectableClique, true);
+			if (nodeMaxDegree != null) {
+				rejectableClique.add(nodeMaxDegree);
+			}
+		}
+
+		acceptableClique.addAll(rejectableClique);
+
+		return acceptableClique;
+	}
+
+	/**
+	* Return the neighbor with the highest degree in a clique 
+	* @param currentNode The node whose neighbor we want to find
+	* @param nodesInClique The set of nodes already in the clique
+	* @param acc Signals if we want a neighbor of accepting or rejecting nodes
+	* @return The neighbor with the highest degree in a clique 
+	*/
+	public CNode getHighestDegreeNeighbor(CNode currentNode, Set<CNode> nodesInClique, boolean acc) {
+		int maxDegree = 0;
+		int degree = 0;
+		CNode nodeMaxDegree = null;
+
+		// 
+		for (CNode node : currentNode.getArcs()) {
+			if (!getAcceptingNodes().contains(node) && acc) {
+				continue;
+			}
+			if (!getRejectingNodes().contains(node) && !acc) {
+				continue;
+			}
+			boolean inClique = true;
+			for (CNode n : nodesInClique) {
+				if (n != currentNode) {
+					if (!n.getArcs().contains(node)) {
+						inClique = false;
+						break;
+					}
+				}
+			}
+			if (inClique) {
+				for (CNode a : node.getArcs()) {
+					if (getAcceptingNodes().contains(a) && acc) {
+						degree++;
+					} else if (getRejectingNodes().contains(a) && !acc) {
+						degree++;
+					}
+				}
+				if (degree > maxDegree) {
+					maxDegree = degree;
+					nodeMaxDegree = node;
+				}
+				degree = 0;
+			}
+		}
+
+		return nodeMaxDegree;
+	}
+
+
 	/**
 	 * Debugging
 	 */
