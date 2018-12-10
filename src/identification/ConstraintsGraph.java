@@ -35,8 +35,9 @@ public class ConstraintsGraph
 	private Set<CNode> positiveNodes = null;
 	private Set<CNode> negativeNodes = null;
 
-	/* Set of all labels: just an useful hint for users of this class */
+	/* Useful hints for users of this class. These are measures of the APTA */
 	private Set<String> labels = new HashSet<String>();
+	private int aptaStatesNum = 0;
 
 
 	// >>> Private functions
@@ -51,16 +52,17 @@ public class ConstraintsGraph
 	private void createFromAPTA(boolean full) {
 
 		// Clone all nodes
-		Set<CNode> nodes = new HashSet<CNode>();
+		Map<APTA.ANode<String>,CNode> nodes = new HashMap<>();
 		for (APTA.ANode<String> n: apta) {
-			nodes.add(new CNode(n));
+			nodes.put(n, new CNode(n));
 		}
+		aptaStatesNum = nodes.size();
 
 		// Save positive and negative
-		positiveNodes = nodes.stream()
+		positiveNodes = nodes.values().stream()
 				.filter(n -> n.response == APTA.Response.ACCEPT)
 				.collect(Collectors.toSet());
-		negativeNodes = nodes.stream()
+		negativeNodes = nodes.values().stream()
 				.filter(n -> n.response == APTA.Response.REJECT)
 				.collect(Collectors.toSet());
 
@@ -73,11 +75,68 @@ public class ConstraintsGraph
 				nP.addArc(nN);
 			}
 		}
-		if (!full) { return; }
 
-		// TODO: Indirect constraints
+		// Indirect constraints
+		if (full) {
 
-		// TODO: Is the complete graph always connected?
+			// Test each pair of nodes
+			for (APTA.ANode<String> n1: nodes.keySet()) {
+				for (APTA.ANode<String> n2: nodes.keySet()) {
+					if (!n1.equals(n2)) {
+
+						// Test and add an arc if failed
+						Set<APTA.ANode<String>> merged = new HashSet<>();
+						boolean consistent = isAConsistentMerge(n1, n2, merged, nodes);
+						if (!consistent) {
+							nodes.get(n1).addArc(nodes.get(n2));
+						}
+					}
+				}
+			}
+		}
+
+		// TODO: Is the complete graph always connected? NO
+	}
+
+
+	/**
+	 * Tests if two nodes can be merged.
+	 * Two states of this graph must be connected by an arc if at least one
+	 * sequence leads from those states to inconsistent nodes.
+	 * @param n1 First node to merge
+	 * @param n2 Second node to merge
+	 * @param merged Merged nodes during this test, initially empty
+	 * @param nodes Map to nodes of this graph
+	 * @return true if they can be merged, false otherwise
+	 */
+	private boolean isAConsistentMerge(APTA.ANode<String> n1,
+			APTA.ANode<String> n2, Set<APTA.ANode<String>> merged,
+			Map<APTA.ANode<String>,CNode> nodes) {
+
+		// Base case
+		CNode c1 = nodes.get(n1);
+		CNode c2 = nodes.get(n2);
+		if (c1.hasArc(c2)) {
+			return false;
+		}
+
+		// Common output Labels from these nodes: set intersection
+		Set<String> sharedLabels = new HashSet<String>();
+		sharedLabels.addAll(n1.getLabels());
+		sharedLabels.retainAll(n2.getLabels());
+
+		// TODO: test all merged states
+
+		// For each output arc with the same label
+		for (String label: sharedLabels) {
+			boolean consistent = isAConsistentMerge(
+					n1.followArc(label), n2.followArc(label), merged, nodes);
+			if (!consistent) {
+				return false;  // Every child must be mergeable
+			}
+		}
+					
+		return true;
 	}
 
 
@@ -192,6 +251,7 @@ public class ConstraintsGraph
 		// Initialization
 		this.apta = apta;
 
+		// Create the graph
 		createFromAPTA(true);
 
 		// Counts
@@ -260,6 +320,15 @@ public class ConstraintsGraph
 
 
 	/**
+	 * The number of states in the APTA.
+	 * @return The number of states in the APTA.
+	 */
+	public int numberOfInputNodes() {
+		return aptaStatesNum;
+	}
+
+
+	/**
 	 * Returns the Latex graph representation
 	 * NOTE: this method assumes as iterator a depth-first pre order visit of
 	 * nodes.
@@ -310,8 +379,9 @@ public class ConstraintsGraph
 		// Build an APTA
 		APTA<String> tree = new APTA<>();
 
-		String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
-		boolean[] ok = { true, false, true, true, true };
+		//String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
+		String[] stringsToAdd = { "abaa", "abb", "a", "b", "bb"};
+		boolean[] ok = { true, false, true, false, true };
 
 		List<List<String>> sequencesToAdd = new ArrayList<>();
 		for (int i = 0; i < stringsToAdd.length; ++i) {
