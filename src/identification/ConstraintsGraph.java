@@ -78,6 +78,7 @@ public class ConstraintsGraph
 
 		// Indirect constraints
 		if (full) {
+			Map<APTA.ANode<String>,List<APTA.ANode<String>>> merged = new HashMap<>();
 
 			// Test each pair of nodes
 			for (APTA.ANode<String> n1: nodes.keySet()) {
@@ -85,17 +86,20 @@ public class ConstraintsGraph
 					if (!n1.equals(n2)) {
 
 						// Test and add an arc if failed
-						Set<APTA.ANode<String>> merged = new HashSet<>();
+						merged.clear();
 						boolean consistent = isAConsistentMerge(n1, n2, merged, nodes);
 						if (!consistent) {
-							nodes.get(n1).addArc(nodes.get(n2));
+							nodes.get(n1).addArc(nodes.get(n2)); // idempotent
 						}
 					}
 				}
 			}
 		}
 
-		// TODO: Is the complete graph always connected? NO
+		// Detect and save connected components (because the whole graph is not
+		// connected)
+
+		// TODO
 	}
 
 
@@ -105,15 +109,17 @@ public class ConstraintsGraph
 	 * sequence leads from those states to inconsistent nodes.
 	 * @param n1 First node to merge
 	 * @param n2 Second node to merge
-	 * @param merged Merged nodes during this test, initially empty
+	 * @param merged Map of merged nodes during this test. Initially empty.
+	 * If a node n1 is merged with n2; there must be also a map from n2 to n2.
 	 * @param nodes Map to nodes of this graph
 	 * @return true if they can be merged, false otherwise
 	 */
 	private boolean isAConsistentMerge(APTA.ANode<String> n1,
-			APTA.ANode<String> n2, Set<APTA.ANode<String>> merged,
+			APTA.ANode<String> n2,
+			Map<APTA.ANode<String>,List<APTA.ANode<String>>> merged,
 			Map<APTA.ANode<String>,CNode> nodes) {
 
-		// Base case
+		// If they are known to be inconsistent, fail
 		CNode c1 = nodes.get(n1);
 		CNode c2 = nodes.get(n2);
 		if (c1.hasArc(c2)) {
@@ -125,8 +131,6 @@ public class ConstraintsGraph
 		sharedLabels.addAll(n1.getLabels());
 		sharedLabels.retainAll(n2.getLabels());
 
-		// TODO: test all merged states
-
 		// For each output arc with the same label
 		for (String label: sharedLabels) {
 			boolean consistent = isAConsistentMerge(
@@ -135,7 +139,30 @@ public class ConstraintsGraph
 				return false;  // Every child must be mergeable
 			}
 		}
+
+		// Prepare the map if not ready
+		if (!merged.containsKey(n1)) {
+			merged.put(n1, new ArrayList<>());
+		}
+		if (!merged.containsKey(n2)) {
+			merged.put(n2, new ArrayList<>());
+		}
+
+		// Both must also be consistent with all other merges
+		for (APTA.ANode<String> asN1: merged.get(n1)) { // n2 with every n1
+			if (c2.hasArc(nodes.get(asN1))) {
+				return false;
+			}
+		}
+		for (APTA.ANode<String> asN2: merged.get(n2)) { // n1 with every n2
+			if (c1.hasArc(nodes.get(asN2))) {
+				return false;
+			}
+		}
 					
+		// Succeed: add both to merges and return true
+		merged.get(n1).add(n2);
+		merged.get(n2).add(n1);
 		return true;
 	}
 
