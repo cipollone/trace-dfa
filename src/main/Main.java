@@ -62,6 +62,7 @@ public class Main {
 
 		// Find initial number of colors (clique)
 		int numberOfColors = cg.getClique().size();
+        System.out.println("Initial number of colors: " + numberOfColors);
 		int maxColors = 100; // made up
 
 		// Try with increasing number of colors

@@ -446,7 +446,7 @@ public class ConstraintsGraph
 					degree++;
 				}
 			}
-			if (degree > maxDegree) {
+			if (degree >= maxDegree) {
 				maxDegree = degree;
 				nodeMaxDegree = n;
 			}
@@ -477,7 +477,7 @@ public class ConstraintsGraph
 					degree++;
 				}
 			}
-			if (degree > maxDegree) {
+			if (degree >= maxDegree) {
 				maxDegree = degree;
 				nodeMaxDegree = n;
 			}
@@ -489,7 +489,7 @@ public class ConstraintsGraph
 
 		// Search between its neighbors to find the other nodes in the clique
 		while (nodeMaxDegree != null) {
-			nodeMaxDegree = getHighestDegreeNeighbor(nodeMaxDegree, rejectableClique, true);
+			nodeMaxDegree = getHighestDegreeNeighbor(nodeMaxDegree, rejectableClique, false);
 			if (nodeMaxDegree != null) {
 				rejectableClique.add(nodeMaxDegree);
 			}
@@ -512,7 +512,6 @@ public class ConstraintsGraph
 		int degree = 0;
 		CNode nodeMaxDegree = null;
 
-		// 
 		for (CNode node : currentNode.getArcs()) {
 			if (!getAcceptingNodes().contains(node) && acc) {
 				continue;
