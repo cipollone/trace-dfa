@@ -61,7 +61,8 @@ public class Main {
 		DFA<String> dfa = null;
 
 		// Find initial number of colors (clique)
-		int numberOfColors = cg.getClique().size();
+        Set<ConstraintsGraph.CNode> clique = cg.getClique();
+		int numberOfColors = clique.size();
         System.out.println("Initial number of colors: " + numberOfColors);
 		int maxColors = 100; // made up
 
@@ -69,9 +70,9 @@ public class Main {
 		for (int i = numberOfColors; i < maxColors; i++) {
 
 				// Encode tree in a formula
-				ProblemEncoding pe = new ProblemEncoding(apta, cg, i);
+				ProblemEncoding pe = new ProblemEncoding(apta, cg, clique, i);
 				pe.generateClauses();
-				//pe.generateRedundantClauses();
+				pe.generateRedundantClauses();
 				Formula encoding = pe.getEncoding();
 
 				// Extract solution with SAT

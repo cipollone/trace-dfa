@@ -34,6 +34,8 @@ public class ProblemEncoding {
 
 	private APTA<String> apta;
 
+	private Set<ConstraintsGraph.CNode> clique;
+
 	// >>> Public functions
 
 	/**
@@ -43,13 +45,14 @@ public class ProblemEncoding {
 	 * @param colors The total number of colors
 	 */
 	@SuppressWarnings({"rawtypes","unchecked"})
-	public ProblemEncoding(APTA<String> apta, ConstraintsGraph cg, int colors) {
+	public ProblemEncoding(APTA<String> apta, ConstraintsGraph cg, Set<ConstraintsGraph.CNode> clique, int colors) {
 		
 		this.cg = cg;
 
 		this.apta = apta;
 		this.vertices = cg.numberOfInputNodes();
 		this.labels = cg.allLabels();
+		this.clique = clique;
 		this.colors = colors;
 
 		this.x = new EncodingVariable[vertices][colors];
@@ -112,6 +115,29 @@ public class ProblemEncoding {
 	 */
 	public Formula getEncoding() {
 		return encoding;
+	}
+
+	/**
+	 * Each vertex in the clique has a different color
+	 */
+	public void initCliqueVar() {
+		int color = 0;
+		for (ConstraintsGraph.CNode n : clique) {
+			if (cg.getAcceptingNodes().contains(n)) {
+				Clause c = new Clause();
+				c.addPositiveVariable(x[n.id][color]);
+				c.addPositiveVariable(z[color]);
+				encoding.addClause(c);
+				color++;
+			}
+			else if (cg.getRejectingNodes().contains(n)) {
+				Clause c = new Clause();
+				c.addPositiveVariable(x[n.id][color]);
+				c.addNegatedVariable(z[color]);
+				encoding.addClause(c);
+				color++;
+			}
+		}
 	}
 
 	/**
@@ -257,6 +283,7 @@ public class ProblemEncoding {
 	 * Generate the basic clauses for the encoding
 	 */
 	public void generateClauses() {
+		initCliqueVar();
 		atLeastOneColor();
 		accRejNotSameColor();
 		parentRelationWhenColor();
