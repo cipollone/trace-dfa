@@ -27,13 +27,13 @@ public class Main {
 		// Learning
 		DFA<String> dfa = learnDFA(trainTracesDir);
 
-		// OPTIONAL: draw final DFA
+		// Draw the DFA in Latex
 		LatexSaver.saveLatexFile(dfa, new File("latex/dfa.tex"), 2);
 
 		// Testing
 		float result = testDFA(dfa, testTracesDir);
 		System.out.println("Consistent in " + (result*100) + "% of traces.");
-}
+	}
 
 		
 	/**
@@ -51,39 +51,44 @@ public class Main {
 		// Build a tree and fill it with traces
 		APTA<String> apta = TraceManager.parseTracesFiles(trainTracesDir);
 
-		// OPTIONAL: draw APTA
+		// Draw the APTA in Latex
 		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
 
-        // Build constraints graph
-        ConstraintsGraph cg = new ConstraintsGraph(apta);
+		// Build constraints graph
+		ConstraintsGraph cg = new ConstraintsGraph(apta);
+
+		// Draw the constraints graph in Latex
+		LatexSaver.saveLatexFile(cg, new File("latex/constraints.tex"), 1);
 
 		// Build graph
 		DFA<String> dfa = null;
 
 		// Find initial number of colors (clique)
-        Set<ConstraintsGraph.CNode> clique = cg.getClique();
+		Set<ConstraintsGraph.CNode> clique = cg.getClique();
 		int numberOfColors = clique.size();
-        System.out.println("Initial number of colors: " + numberOfColors);
 		int maxColors = 100; // made up
+
+		System.out.println("Initial number of colors: " + numberOfColors);
 
 		// Try with increasing number of colors
 		for (int i = numberOfColors; i < maxColors; i++) {
 
-				// Encode tree in a formula
-				ProblemEncoding pe = new ProblemEncoding(apta, cg, clique, i);
-				pe.generateClauses();
-				pe.generateRedundantClauses();
-				Formula encoding = pe.getEncoding();
+			// Encode the coloring problem
+			//   Note: with the redundant clauses the solution takes more time but
+			//   the extracted DFA has a complete transition function
+			ProblemEncoding pe = new ProblemEncoding(apta, cg, clique, i);
+			pe.generateClauses();
+			pe.generateRedundantClauses();
+			Formula encoding = pe.getEncoding();
 
-				// Extract solution with SAT
-				List<EncodingVariable> solution = Solver.extractSolution(encoding);
+			// Extract solution with SAT
+			List<EncodingVariable> solution = Solver.extractSolution(encoding);
 
-				// Solution found
-				if (solution != null) {
-
-						dfa = Solver.extractNewDFA(solution);
-						return dfa;
-				}
+			// Solution found
+			if (solution != null) {
+				dfa = Solver.extractNewDFA(solution);
+				return dfa;
+			}
 		}
 
 		throw new RuntimeException("Reached limit of states: unsatisfiable with " +
@@ -92,8 +97,9 @@ public class Main {
 
 
 	/**
-	 * Test the DFA. A single test succed if dfa is consistent with an APTA build
-	 * on the test trace.
+	 * Test the DFA.
+	 * A single test succed if DFA is consistent with an APTA built on the test
+	 * traces.
 	 * @param dfa A dfa to test with traces
 	 * @param testTracesDir Directory of .xes files to use for testing.
 	 * @return The fraction of tests passed.
@@ -110,38 +116,6 @@ public class Main {
 		List<List<String>> testTraces = TraceManager.getTracesFiles(testTracesDir);
 
 		return compareOnTraces(testTraces, apta, dfa);
-	}
-
-	/**
-	 * Test all models on a set of traces.
-	 * All automata in models must parse with the same result all traces.
-	 * @param traces A list of test sequences
-	 * @param models The models to compare
-	 * @return true if all results are consistent, false otherwise.
-	 */
-	@SafeVarargs
-	public static <LabelT> boolean testOnTraces(List<List<LabelT>> traces,
-			Automaton<LabelT>... models) { 
-
-		// For each sequence
-		for (List<LabelT> trace: traces) {
-
-			// For each model
-			Boolean result = null;
-			for (Automaton<LabelT> model: models) {
-				if (result == null) { // Save first
-					result = model.parseSequence(trace);
-				} else {              // Compare others
-					if (result != model.parseSequence(trace)) {
-						return false;
-					}
-				}
-				//System.out.print(" " + result);
-			}
-			//System.out.print(" " + trace + "\n");
-		}
-
-		return true;
 	}
 
 
@@ -169,9 +143,9 @@ public class Main {
 			boolean testPassed = true;
 			for (Automaton<LabelT> model: models) {
 				if (result == null) { // Save first
-					result = model.parseSequence(trace);
+					result = model.parseSequence(trace, true);
 				} else {              // Compare others
-					if (result != model.parseSequence(trace)) {
+					if (result != model.parseSequence(trace, true)) {
 						testPassed = false;
 						break; // Test failed
 					}

@@ -221,16 +221,23 @@ public class DFA<LabelT>
 	 * Parse this sequence and return the result.
 	 * If the sequence has some nonexistent transitions, false is returned.
 	 * @param sequence A list of labels
+	 * @param strict If true, for any sequence leading to impossible transitions,
+	 * a RuntimeException is thrown; if false, the sequence is just rejected.
 	 * @return true if the sequence is accepted, false otherwise
 	 */
 	@Override
-	public boolean parseSequence(List<LabelT> sequence) {
+	public boolean parseSequence(List<LabelT> sequence, boolean strict) {
 
 		// Traverse the automaton
 		DNode<LabelT> node = followPath(sequence);
 
 		if (node == null) {
-			return false;
+			if (strict) {
+				throw new RuntimeException("Can't parse " + sequence +
+						" : impossible transitions.");
+			} else {
+				return false;
+			}
 		}
 		return node.getFinalFlag();
 	}
@@ -330,13 +337,13 @@ public class DFA<LabelT>
 		// Test parsing
 		List<Character> l;
 		l = new ArrayList<Character>();
-		System.out.println(dfa.parseSequence(l));
+		System.out.println(dfa.parseSequence(l, false));
 		l = Arrays.asList('a','c');
-		System.out.println(dfa.parseSequence(l));
+		System.out.println(dfa.parseSequence(l, false));
 		l = Arrays.asList('a','h');
-		System.out.println(dfa.parseSequence(l));
+		System.out.println(dfa.parseSequence(l, false));
 		l = Arrays.asList('a','c','a','b');
-		System.out.println(dfa.parseSequence(l));
+		System.out.println(dfa.parseSequence(l, false));
 
 
 		// Test Latex

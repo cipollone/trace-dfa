@@ -180,11 +180,27 @@ public class APTA<LabelT>
 	/**
 	 * Returns true for accepted sequences, false otherwise.
 	 * @param sequence A list of labels
+	 * @param strict If true, for any sequence leading to impossible transitions,
+	 * a RuntimeException is thrown; if false, the sequence is just rejected.
 	 * @return Result of parsing
 	 */
 	@Override
-	public boolean parseSequence(List<LabelT> sequence) {
-		return parseSequenceAPTA(sequence) == Response.ACCEPT;
+	public boolean parseSequence(List<LabelT> sequence, boolean strict) {
+
+		// Traverse the tree
+		ANode<LabelT> node = followPath(sequence);
+
+		// Return the response of the final node
+		if (node == null) {
+			if (strict) {
+				throw new RuntimeException("Can't parse " + sequence +
+						" : impossible transitions.");
+			} else {
+				return false;
+			}
+		}
+
+		return node.getResponse() == Response.ACCEPT;
 	}
 
 
@@ -272,7 +288,7 @@ public class APTA<LabelT>
 		Automaton<Character> automaton = tree;
 		for (List<Character> sequence: sequencesToParse) {
 			System.out.print(sequence + "  ");
-			System.out.println(automaton.parseSequence(sequence));
+			System.out.println(automaton.parseSequence(sequence, false));
 		}
 
 		// Testing LatexSaver class and LatexPrintableGraph interface
