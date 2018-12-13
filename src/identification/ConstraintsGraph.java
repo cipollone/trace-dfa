@@ -354,6 +354,55 @@ public class ConstraintsGraph
 	}
 
 
+	/**
+	* Return the neighbor with the highest degree in a clique.
+	* @param currentNode The node whose neighbor we want to find
+	* @param nodesInClique The set of nodes already in the clique
+	* @param nodesSet The set of all nodes to consider. The returned node will
+	* also belong to this set.
+	* @return The neighbor with the highest degree in a clique or null if no node
+	* in nodesSet satisfy the requirements.
+	*/
+	private CNode getHighestDegreeNeighbor(CNode currentNode,
+			Set<CNode> nodesInClique, Set<CNode> nodesSet) {
+
+		// Next node in clique: init
+		int maxDegree = 0;
+		CNode nodeMaxDegree = null;
+
+		// For each neighbour
+		for (CNode node : currentNode.getArcs()) {
+
+			// If not among the nodes to consider, skip
+			if (!nodesSet.contains(node)) { continue; }
+
+			// Node must be connected to all other nodes in the clique
+			boolean inClique = true;
+			for (CNode n : nodesInClique) {
+				if ((n != currentNode) && (!n.hasArc(node))) {
+						inClique = false;
+						break;
+				}
+			}
+			if (!inClique) { continue; }  // If not, skip
+
+			// Count the degree
+			int degree = 0;
+			for (CNode a : node.getArcs()) {
+				if (nodesSet.contains(a)) { ++degree; }
+			}
+
+			// Save as best choice if this has the higher degree
+			if (degree > maxDegree) {
+				maxDegree = degree;
+				nodeMaxDegree = node;
+			}
+		}
+
+		return nodeMaxDegree;
+	}
+
+
 	// >>> Public functions
 
 	/**
@@ -376,6 +425,17 @@ public class ConstraintsGraph
 		for (APTA.ANode<String> node: apta) {
 			labels.addAll(node.getLabels());
 		}
+	}
+
+
+	/**
+	 * Tests if this constraints graph reflects the apta.
+	 * It just checks the given APTA is equal to that passen to the constructor
+	 * @param apta The apta to check
+	 * @return true if this constraints graph describes apta
+	 */
+	public boolean isBuiltOnAPTA(APTA<String> apta) {
+		return this.apta.equals(apta);
 	}
 
 
@@ -495,6 +555,60 @@ public class ConstraintsGraph
 
 
 	/**
+	* Return a set of nodes forming a clique in the ConstraintsGraph
+	* @return A clique found in ConstrainstGraph
+	*/
+	public Set<CNode> getClique() {
+
+		// Start with an empty clique
+		Set<CNode> fullClique = new HashSet<>();
+
+		// Sets of nodes to consider. Cliques found here will be joined
+		List<Set<CNode>> allNodes = Arrays.asList(getAcceptingNodes(),
+				getRejectingNodes());
+
+		// For each set
+		for (Set<CNode> nodesSet: allNodes) {
+
+			Set<CNode> clique = new HashSet<>();
+
+			// Find node with the highest degree
+			int maxDegree = 0;
+			CNode nodeMaxDegree = null;
+
+			for (CNode n : nodesSet) {
+				int degree = 0;
+				for (CNode a : n.getArcs()) {
+					if (nodesSet.contains(a)) {
+						degree++;
+					}
+				}
+				if (degree >= maxDegree) {
+					maxDegree = degree;
+					nodeMaxDegree = n;
+				}
+			}
+
+			// Add it to the clique
+			if (nodeMaxDegree == null) { continue; }
+			clique.add(nodeMaxDegree);
+
+			// Search its neighbors to find other nodes in the clique
+			while (true) {
+				nodeMaxDegree = getHighestDegreeNeighbor(nodeMaxDegree, clique, nodesSet);
+				if (nodeMaxDegree == null) { break; }
+				clique.add(nodeMaxDegree);
+			}
+
+			// Done: add to the final clique. (because all these nodes are connected)
+			fullClique.addAll(clique);
+		}
+
+		return fullClique;
+	}
+
+
+	/**
 	 * Debugging
 	 */
 	public static void test() {
@@ -502,10 +616,11 @@ public class ConstraintsGraph
 		// Build an APTA
 		APTA<String> tree = new APTA<>();
 
-		//String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
-		//String[] stringsToAdd = { "aaa", "baa", "ba"};
-		String[] stringsToAdd = { "abaa", "abb", "a", "b", "bb"};
-		boolean[] ok = { true, false, true, false, true };
+		//String[] stringsToAdd = { "abaa", "abb", "a", "b", "bb"};
+		//boolean[] ok = { true, false, true, false, true };
+		//String[] stringsToAdd = { "aaa", "baa", "ba", "aa", "b", "a", ""};
+		String[] stringsToAdd = {"aaa", "baa", "ba", "aa", "b", "a", "", "aab", "bb", "c", "cb"};
+		boolean[] ok = { true, false, false, true, true, true, false, true, true, true, false};
 
 		List<List<String>> sequencesToAdd = new ArrayList<>();
 		for (int i = 0; i < stringsToAdd.length; ++i) {
@@ -543,6 +658,9 @@ public class ConstraintsGraph
 			nodes++;
 		}
 		System.out.println(nodes + " nodes\n");
+
+		// Testing getHighestDegreeNeighbor and getClique: ok
+		System.out.println(graph.getClique());
 	}
 
 
