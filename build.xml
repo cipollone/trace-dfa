@@ -1,7 +1,7 @@
 <project name="TraceDFA" default="run" basedir=".">
 
 	<!-- Settings -->
-	<property name="debugging" value="true"/>
+	<property name="debugging" value="false"/>
 	<property name="doc-level" value="protected"/>
 
 	<!-- Names -->
@@ -28,8 +28,9 @@
 	</target>
 
 	<target name="doc">
-		<javadoc sourcepath="${src.dir}" destdir="${doc.dir}"
-			access="${doc-level}">
+		<javadoc sourcepath="${src.dir}"
+			sourcefiles="${src.dir}/${main-class}.java"
+			destdir="${doc.dir}" access="${doc-level}">
 			<classpath refid="libs.path"/>
 		</javadoc>
 	</target>
@@ -45,7 +46,7 @@
 	</target>
 
 	<target name="run" depends="build">
-		<java classname="main.Main">
+		<java classname="${main-class}">
 			<classpath>
 				<pathelement path="${build.dir}/classes"/>
 				<path refid="libs.path"/>

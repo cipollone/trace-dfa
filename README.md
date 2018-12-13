@@ -3,7 +3,7 @@
 
 Finds the minimum Deterministic Finite-State Automaton (*DFA*) that is consisted the given accepted and rejected sequences.
 
-The program reads .xes files and uses that logs as input sequences.
+The program reads .xes files and uses these logs as input sequences.
 
 This project is a small implementation of: Marijn J. H. Heule and Sicco Verwer. 2010. Exact DFA identification using SAT solvers.
 
@@ -32,4 +32,7 @@ Run with `ant`. To genereate the source documentation, run `ant doc`.
 
 ## Output DFA
 
-The program will create a directory "latex" with two Latex files: apta.tex and dfa.tex. When compiled, they generate two PDFs: one contains the APTA the algorithm uses to represent the input traces (to learn); the other represents the DFA that is the result of learning.
+The program will create a directory "output" with tree Latex files:
+* *dfa.tex* is the main output of the program. This is the extracted Finite State Automaton which is consistent with the given traces.
+* *apta.tex* is the APTA the algorithm uses internally to represent the input traces (to learn). For many traces you won't be able to compile this, due to space limitation on the page.
+* *constraints.tex* is the graph of constraints the algorithm internally uses to represent the constraints in the coloring problem. This also could exceed Tex limitations.

@@ -1,10 +1,8 @@
 
-package main;
-
 import automata.*;
 import identification.*;
 import cnf.*;
-import tracemanager.*;
+import util.*;
 
 import java.io.*;
 import java.util.*;
@@ -28,7 +26,7 @@ public class Main {
 		DFA<String> dfa = learnDFA(trainTracesDir);
 
 		// Draw the DFA in Latex
-		LatexSaver.saveLatexFile(dfa, new File("latex/dfa.tex"), 2);
+		LatexSaver.saveLatexFile(dfa, new File("output/dfa.tex"), 2);
 
 		// Testing
 		float result = testDFA(dfa, testTracesDir);
@@ -52,13 +50,13 @@ public class Main {
 		APTA<String> apta = TraceManager.parseTracesFiles(trainTracesDir);
 
 		// Draw the APTA in Latex
-		LatexSaver.saveLatexFile(apta, new File("latex/apta.tex"), 1);
+		LatexSaver.saveLatexFile(apta, new File("output/apta.tex"), 1);
 
 		// Build constraints graph
 		ConstraintsGraph cg = new ConstraintsGraph(apta);
 
 		// Draw the constraints graph in Latex
-		LatexSaver.saveLatexFile(cg, new File("latex/constraints.tex"), 1);
+		LatexSaver.saveLatexFile(cg, new File("output/constraints.tex"), 1);
 
 		// Build graph
 		DFA<String> dfa = null;
