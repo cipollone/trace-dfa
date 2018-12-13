@@ -43,6 +43,17 @@ public class ConstraintsGraph
 	// >>> Private functions
 
 	/**
+	 * Constructor.
+	 * Empty graph, not related to any APTA instance.
+	 * Used internally.
+	 */
+	private ConstraintsGraph() {
+		this.apta = null;
+		this.firstNodes = new HashSet<>();
+	}
+
+
+	/**
 	 * Creates the constraints graph from the apta.
 	 * If the parameter is set to true, the graph built contains both the direct
 	 * and indirect constraints. With false, just the indirect constraints
@@ -197,29 +208,80 @@ public class ConstraintsGraph
 
 
 	/**
-	 * Returns the Latex graph representation.
-	 * Depth first visit of the graph. First part of the helper function:
-	 * just a spanning tree is printed.
+	 * Create a spanning trees with a breadth-first visit.
+	 * Returns a new graph which mirrors this one with loops removed.
+	 * A the new graph contains just a spanning tree, found with a breadth first
+	 * visit, one for each connected component.
+	 * @param loops A set of arcs, in which the function will add all arcs not
+	 * in the spanning trees.
+	 * @return A new graph with just the spanning trees
+	 */
+	private ConstraintsGraph breadthSpanningTree(Set<Pair<CNode,CNode>> loops) {
+
+		// The new graph
+		ConstraintsGraph tree = new ConstraintsGraph();
+
+		// For each connected component
+		for (CNode firstNode: firstNodes) {
+
+			// Old nodes added to the queue, map to new nodes
+			Map<CNode,CNode> added = new HashMap<>();
+
+			// Pairs of (old,new) nodes to process
+			Queue<Pair<CNode,CNode>> toExpand = new LinkedList<>();
+
+			// Init
+			CNode newFirst = new CNode(firstNode);
+			tree.firstNodes.add(newFirst);
+			toExpand.offer(new Pair<>(firstNode, newFirst));
+			added.put(firstNode, newFirst);
+
+			// Loop
+			while (!toExpand.isEmpty()) {
+
+				// Expand next
+				Pair<CNode,CNode> next = toExpand.poll();
+				CNode oldN = next.left;
+				CNode newN = next.right;
+				for (CNode child: oldN.getArcs()) {
+
+					// If new child: clone and expand
+					if (!added.containsKey(child)) {
+						// Clone
+						CNode newChild = new CNode(child);
+						newN.addArc(newChild);
+						// Expand
+						toExpand.offer(new Pair<>(child, newChild));
+						added.put(child, newChild);
+					}
+					else {
+						// Old. Add to loops if not in the spanning tree already
+						CNode newChild = added.get(child);
+						if (!newN.hasArc(newChild) &&
+								!loops.contains(new Pair<>(newChild, newN))) {
+							loops.add(new Pair<>(newN, newChild));
+						}
+					}
+				}
+			}
+		}
+
+		return tree;
+	}
+
+
+	/**
+	 * Returns the Latex tree representation.
+	 * Depth first visit of the tree. First part of the helper function.
+	 * NOTE: assuming the graph connected to node is a tree!
 	 * @param stringB The string representation: modified in place,initally empty
 	 * @param node The current node: initially root
-	 * @param visited A set of visited nodes: initially empty
 	 * @param parent The parent node, initially null.
-	 * @param loops Arcs not printed because they form loops, initially empty.
 	 * @return Latex code
 	 * @see ConstraintsGraph#getLatexGraphRepresentation
 	 */
-	private void buildLatexRepresentation1(StringBuilder stringB, CNode node,
-			Set<CNode> visited, CNode parent, Set<Pair<CNode,CNode>> loops) {
-
-		// Already visited?
-		if (visited.contains(node)) {
-			if (!loops.contains(new Pair<>(node, parent))) { // Note the reversed order
-				loops.add(new Pair<>(parent, node));
-			}
-			return;
-		} else {
-			visited.add(node);
-		}
+	private static void buildLatexRepresentation1(StringBuilder stringB,
+			CNode node, CNode parent) {
 
 		// Add the node id in a new line
 		stringB.append("\n\t\t");
@@ -248,7 +310,7 @@ public class ConstraintsGraph
 		stringB.append("-- {");
 		int i = arcs.size();
 		for (CNode n: arcs) {
-			buildLatexRepresentation1(stringB, n, visited, node, loops);
+			buildLatexRepresentation1(stringB, n, node);
 			--i;
 			char sep = (i > 0) ? ',' : '}';
 			stringB.append(sep);
@@ -263,7 +325,7 @@ public class ConstraintsGraph
 	 * @param loops Arcs to print.
 	 * @see DFA#getLatexGraphRepresentation
 	 */
-	private void buildLatexRepresentation2(StringBuilder stringB,
+	private static void buildLatexRepresentation2(StringBuilder stringB,
 			Set<Pair<CNode,CNode>> loops) {
 
 		stringB.append("\n");
@@ -394,14 +456,18 @@ public class ConstraintsGraph
 
 		// Structures
 		StringBuilder stringB = new StringBuilder();
-		Set<CNode> visited = new HashSet<>();
 		Set<Pair<CNode,CNode>> loops = new HashSet<>();
 
-		// Call
-		for (CNode firstNode: firstNodes) {
-			buildLatexRepresentation1(stringB, firstNode, visited, null, loops);
+		// Find the spanning trees
+		ConstraintsGraph trees = breadthSpanningTree(loops);
+
+		// Print spanning trees
+		for (CNode firstNode: trees.firstNodes) {
+			buildLatexRepresentation1(stringB, firstNode, null);
 			stringB.append(',');
 		}
+
+		// Print loops
 		buildLatexRepresentation2(stringB, loops);
 
 		return stringB.toString();
@@ -468,15 +534,15 @@ public class ConstraintsGraph
 
 		// Testing set of states: ok
 		
-		// Testing the set of edges
+		// Testing the set of edges: ok
 		System.out.println(graph.constraints().size() + " constraints");
 
-		// Testing iterators
+		// Testing iterators: ok
 		int nodes = 0;
 		for (CNode n: graph) {
 			nodes++;
 		}
-		System.out.println(nodes + " nodes");
+		System.out.println(nodes + " nodes\n");
 	}
 
 
@@ -603,6 +669,17 @@ public class ConstraintsGraph
 		private CNode(APTA.ANode<String> node) {
 			this.id = node.id;
 			this.response = node.getResponse();
+		}
+		
+		
+		/**
+		 * Constructor.
+		 * A new (disconnected) node with the same response and id.
+		 * @param node An existing node to copy
+		 */
+		private CNode(CNode node) {
+			this.id = node.id;
+			this.response = node.response;
 		}
 		
 		
