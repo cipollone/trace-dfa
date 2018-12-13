@@ -385,8 +385,6 @@ public class ConstraintsGraph
 				}
 			}
 			if (!inClique) { continue; }  // If not, skip
-			System.out.println("> GHD: " + node + ", neighbor of " + currentNode + 
-					" is connected to all " + nodesInClique);
 
 			// Count the degree
 			int degree = 0;
@@ -401,8 +399,6 @@ public class ConstraintsGraph
 			}
 		}
 
-		System.out.println("> GHD: " + nodeMaxDegree +
-				" is the highest degree neighbor of " + currentNode);
 		return nodeMaxDegree;
 	}
 
@@ -429,6 +425,17 @@ public class ConstraintsGraph
 		for (APTA.ANode<String> node: apta) {
 			labels.addAll(node.getLabels());
 		}
+	}
+
+
+	/**
+	 * Tests if this constraints graph reflects the apta.
+	 * It just checks the given APTA is equal to that passen to the constructor
+	 * @param apta The apta to check
+	 * @return true if this constraints graph describes apta
+	 */
+	public boolean isBuiltOnAPTA(APTA<String> apta) {
+		return this.apta.equals(apta);
 	}
 
 
@@ -581,8 +588,6 @@ public class ConstraintsGraph
 					nodeMaxDegree = n;
 				}
 			}
-			System.out.println("> GC: Found first node with highest degree: " +
-					nodeMaxDegree + " in " + nodesSet);
 
 			// Add it to the clique
 			if (nodeMaxDegree == null) { continue; }
@@ -596,11 +601,9 @@ public class ConstraintsGraph
 			}
 
 			// Done: add to the final clique. (because all these nodes are connected)
-			System.out.println("> GC: Found clique " + clique + " for " + nodesSet);
 			fullClique.addAll(clique);
 		}
 
-		System.out.println("> GC: Final clique " + fullClique);
 		return fullClique;
 	}
 
@@ -656,7 +659,7 @@ public class ConstraintsGraph
 		}
 		System.out.println(nodes + " nodes\n");
 
-		// Testing getHighestDegreeNeighbor and getClique
+		// Testing getHighestDegreeNeighbor and getClique: ok
 		System.out.println(graph.getClique());
 	}
 
