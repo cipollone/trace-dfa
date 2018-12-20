@@ -66,17 +66,16 @@ public class Main {
 		int numberOfColors = clique.size();
 		int maxColors = 100; // made up
 
-		System.out.println("Initial number of colors: " + numberOfColors);
+		System.out.println("Initial number of states: " + numberOfColors);
 
 		// Try with increasing number of colors
-		for (int i = numberOfColors; i < maxColors; i++) {
+		for (; numberOfColors < maxColors; numberOfColors++) {
 
 			// Encode the coloring problem
-			//   Note: with the redundant clauses the solution takes more time but
-			//   the extracted DFA has a complete transition function
-			ProblemEncoding pe = new ProblemEncoding(apta, cg, clique, i);
+			//   NOTE: the blocked clauses are not used because they slow down this solver
+			ProblemEncoding pe = new ProblemEncoding(apta, cg, clique, numberOfColors);
 			pe.generateClauses();
-			pe.generateRedundantClauses();
+			//pe.generateRedundantClauses();
 			Formula encoding = pe.getEncoding();
 
 			// Extract solution with SAT
@@ -84,8 +83,11 @@ public class Main {
 
 			// Solution found
 			if (solution != null) {
+				System.out.println("Satisfiable with " + numberOfColors + " states");
 				dfa = Solver.extractNewDFA(solution);
 				return dfa;
+			} else {
+				System.out.println("Unsatisfiable with " + numberOfColors + " states");
 			}
 		}
 

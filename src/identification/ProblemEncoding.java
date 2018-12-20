@@ -291,7 +291,8 @@ public class ProblemEncoding {
 
 
 	/**
-	 * Generate the basic clauses for the encoding
+	 * Generate the basic clauses for the encoding.
+	 * Minimal clauses + clause for complete DFA (total transition function).
 	 */
 	public void generateClauses() {
 		initCliqueVar();
@@ -299,14 +300,14 @@ public class ProblemEncoding {
 		accRejNotSameColor();
 		parentRelationWhenColor();
 		parentAtMostOneColor();
+		parentAtLeastOneColor();
 	}
 
 	/**
-	 * Generate the redundant clauses
+	 * Generate redundant clauses.
 	 */
 	public void generateRedundantClauses() {
 		atMostOneColor();
-		parentAtLeastOneColor();
 		parentForceVertex();
 		determinConflicts();
 	}

@@ -25,56 +25,52 @@ public class Solver {
 	// >>> Public functions
 	/**
 	 * Extract the true variables from a solution
-	 * @return A list of variables, with boolean member assigned.
+	 * @return A list of variables, with boolean values assigned, or null, if the
+	 * problem is unsatisfiable.
+	 * @throws RuntimeException To describe any IO or logic error.
 	 */
 	public static List<EncodingVariable> extractSolution(Formula f) {
 
-		// Translate formula in Dimacs format
-		DimacsSaver saver = new DimacsSaver(f);
 		try {
+			// Translate formula in Dimacs format
+			DimacsSaver saver = new DimacsSaver(f);
 			boolean ret = saver.saveToDimacsFile(new File("output/dimacsFormula.cnf"));
+
+			// Initialize solution and mapping between dimacs format and our Variable format
+			List<EncodingVariable> solution = null;
+			Map<Integer,Variable> mapToVar = saver.idToVarsMap();
+
+			// Find the solution using sat4j
+			ISolver solver = SolverFactory.newDefault();
+			solver.setTimeout(3600); // 1 hour timeout
+			Reader reader = new DimacsReader(solver);
+			// PrintWriter out = new PrintWriter(System.out,true);
+			// CNF filename is given on the command line 
+			IProblem problem = reader.parseInstance("output/dimacsFormula.cnf");
+			if (problem.isSatisfiable()) {
+				// reader.decode(problem.model(),out);
+				solution = new ArrayList<>(problem.model().length);
+				for (Integer i : problem.model()) {
+					if (i > 0) {
+						EncodingVariable ev = (EncodingVariable)mapToVar.get(i);
+						ev.assign(true);
+						solution.add(ev);
+					}
+				}
+				return solution;
+			}
+		} catch (ContradictionException e) { // Unsatisfiable, trivial
+			return null;
+		} catch (TimeoutException e) {
+			throw new RuntimeException("Can't solve: timeout", e);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException("Can't solve: dimacs file not found.", e);
+		} catch (ParseFormatException e) {
+			throw new RuntimeException("Can't solve: wrong format in dimacs file.", e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Can't solve: IO error with dimacs file.", e);
 		}
-
-		// Initialize solution and mapping between dimacs format and our Variable format
-		List<EncodingVariable> solution = null;
-        Map<Integer,Variable> mapToVar = saver.idToVarsMap();
-
-        // Find the solution using sat4j
-		ISolver solver = SolverFactory.newDefault();
-        solver.setTimeout(3600); // 1 hour timeout
-        Reader reader = new DimacsReader(solver);
-        // PrintWriter out = new PrintWriter(System.out,true);
-        // CNF filename is given on the command line 
-        try {
-            IProblem problem = reader.parseInstance("output/dimacsFormula.cnf");
-            if (problem.isSatisfiable()) {
-                // reader.decode(problem.model(),out);
-                System.out.println("Satisfiable!");
-                solution = new ArrayList<>(problem.model().length);
-                for (Integer i : problem.model()) {
-                	if (i > 0) {
-                		EncodingVariable ev = (EncodingVariable)mapToVar.get(i);
-                		ev.assign(true);
-                		solution.add(ev);
-                	}
-                }
-            } else {
-                System.out.println("Unsatisfiable!");
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found!");
-        } catch (ParseFormatException e) {
-            System.out.println("Problem during parsing!");
-        } catch (IOException e) {
-            System.out.println("Problem during I/O operations");
-        } catch (ContradictionException e) {
-            System.out.println("Unsatisfiable (trivial)!");
-        } catch (TimeoutException e) {
-            System.out.println("Timeout, sorry!");      
-        }
-        return solution;
+		return null;
 	}
 	
 	/**
