@@ -26,6 +26,7 @@ public class Main {
 		DFA<String> dfa = learnDFA(trainTracesDir);
 
 		// Draw the DFA in Latex
+		dfa.useLegend(true);
 		LatexSaver.saveLatexFile(dfa, new File("output/dfa.tex"), 2);
 
 		// Testing

@@ -8,9 +8,9 @@ import java.io.File;
 /**
  * This class can be used to build DFA objects.
  * It allows to specify the DFA in terms of the nodes and arcs that contains.
- * States are identified with integers. Every new integer used implicitly
- * generates a new node. All referenced states are kept in a DFABuilder, but
- * unconnected nodes will be deleted from the returned DFA.
+ * States are identified with integers. Every integer used implicitly generates
+ * a new node. All referenced states are kept in a DFABuilder, but unconnected
+ * nodes will be deleted from the returned DFA.
  * @see DFABuilder#newArc
  * @see DFA
  */
@@ -59,20 +59,24 @@ public class DFABuilder<LabelT> {
 	 * Set this state as final.
 	 * If necessary, it is added to the graph as a new state.
 	 * @param state The id of a final state
+	 * @return this
 	 */
-	public void setFinalState(int state) {
+	public DFABuilder<LabelT> setFinalState(int state) {
 		DFA.DNode<LabelT> node = aState(state);
 		node.setFinalFlag(true);
+		return this;
 	}
 
 
 	/**
 	 * Set this state as the initial state in the DFA.
 	 * @param state The id of the initial state
+	 * @return this
 	 */
-	public void setInitialState(int state) {
+	public DFABuilder<LabelT> setInitialState(int state) {
 		DFA.DNode<LabelT> node = aState(state);
 		dfa.firstNode = node;
+		return this;
 	}
 
 
@@ -82,11 +86,13 @@ public class DFABuilder<LabelT> {
 	 * @param parent The id of the parent state
 	 * @param label The label of the arc
 	 * @param child The id of the child state
+	 * @return this
 	 */
-	public void newArc(int parent, LabelT label, int child) {
+	public DFABuilder<LabelT> newArc(int parent, LabelT label, int child) {
 		DFA.DNode<LabelT> parentNode = aState(parent);
 		DFA.DNode<LabelT> childNode = aState(child);
 		parentNode.addArc(label, childNode);
+		return this;
 	}
 
 

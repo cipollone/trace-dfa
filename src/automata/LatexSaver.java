@@ -34,6 +34,9 @@ public final class LatexSaver {
 
 		// Package options
 		String classOptions = graph.standaloneClassLatexOptions();
+		if (classOptions == null) {
+			classOptions = "";
+		}
 
 		// Latex file template
 		String latexFilePart1 =

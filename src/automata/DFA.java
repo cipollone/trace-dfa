@@ -2,14 +2,19 @@
 package automata;
 
 import java.util.*;
-import java.io.File;
-
+import java.io.*;
 import util.Pair;
+import org.processmining.ltl2automaton.plugins.automaton.DefaultAutomatonFactory;
+import org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton;
+import org.processmining.ltl2automaton.plugins.automaton.State;
+import org.processmining.ltl2automaton.plugins.automaton.Transition;
+import org.processmining.ltl2automaton.plugins.automaton.DOTExporter;
 
 
 /**
  * Deterministic Finite-States Automaton class.
  * Each transition has a label of type LabelT.
+ * To create instances of this class use {@link DFABuilder}
  */
 public class DFA<LabelT>
 		extends AbstractGraph<LabelT, DFA.DNode<LabelT>>
@@ -18,8 +23,10 @@ public class DFA<LabelT>
 	// >>> Fields
 
 	/* Auxiliary variable, used for printing a legend of the labels.
-	 * It's used with (short_label, long_label) couples. */
+	 * It's used with (short_label, long_label) couples. See the NOTE in
+	 * getLatexGraphRepresentation() */
 	private Map<Integer,String> legendMap = null;
+	private boolean usingLegend = false; // Call useLegend(true) to enable
 
 
 	// >>> Private functions
@@ -49,12 +56,10 @@ public class DFA<LabelT>
 		Map<DNode<LabelT>, DNode<String>> nodesMap =  // Old -> new map
 				new HashMap<>();
 
-		// Optional: using ints instead of true labels
+		// Initialize the legend, if used
 		int nextIntLabel = 0;
-		boolean usingLegend = false;
-		if (legendMap != null) {
-			legendMap.clear();
-			usingLegend = true;
+		if (usingLegend) {
+			legendMap = new HashMap<>();
 		}
 	
 		// Create all nodes in advance
@@ -244,15 +249,27 @@ public class DFA<LabelT>
 
 
 	/**
+	 * Whether to use numbers instead of the true labels in the Latex
+	 * representation.
+	 * Call this function before saving the Latex file.
+	 * @param flag The boolean flag. Default false.
+	 */
+	public void useLegend(boolean flag) {
+		usingLegend = flag;
+	}
+
+
+	/**
 	 * Returns the body of a tikzpicture in Latex that represents this graph.
+	 * Call {@link DFA#useLegend} in advance to enable/disable the legend in the
+	 * final document. This is useful when there are long or many labels.
 	 * @return The string for this graph
 	 */
 	@Override
 	public String getLatexGraphRepresentation() {
 
-		// Simplify the graph
-		legendMap = new HashMap<>(); // Shortening labels
-		DFA<String> simpleDFA = simpleArcsRepresentation();
+		// Simplify the graph.
+		DFA<String> dfa = simpleArcsRepresentation();
 
 		// Data structures
 		StringBuilder stringB = new StringBuilder();
@@ -260,22 +277,24 @@ public class DFA<LabelT>
 		Set<Pair<DNode<String>,String>> loops = new HashSet<>();
 
 		// Recursive call
-		simpleDFA.buildLatexRepresentation1(stringB, null, null, visited, loops);
+		dfa.buildLatexRepresentation1(stringB, null, null, visited, loops);
 
 		// Adding remaining edges
-		simpleDFA.buildLatexRepresentation2(stringB, loops);
+		dfa.buildLatexRepresentation2(stringB, loops);
 
 		return stringB.toString();
 	}
 
 
 	/**
-	 * Extra latex code used for printing the legend.
-	 * A new environment in which the legend of the labels is printed
+	 * Extra latex code used for printing the legend, if used.
+	 * A new environment in which the legend of the labels is printed.
 	 * @return The legend as Latex code
 	 */
 	@Override
 	public String extraLatexEnv() {
+
+		if (!usingLegend) { return null; }
 
 		// Open
 		StringBuilder stringB = new StringBuilder();
@@ -309,7 +328,48 @@ public class DFA<LabelT>
 	 */
 	@Override
 	public String standaloneClassLatexOptions() {
-		return "[varwidth=40em]"; // NOTE: assuming the DFA is small enough
+		// Fixed width when using the legend
+		if (usingLegend) {
+			return "[varwidth=40em]"; // NOTE: assuming the DFA is small enough
+		} else {
+			return null;
+		}
+	}
+
+
+	/**
+	 * Returns this Automaton as a {@link org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton}
+	 * of the LTL2Automaton library.
+	 * Each label is represented as a {@link import org.processmining.ltl2automaton.plugins.automaton.TransitionLabel}
+	 * with a single true preposition with the same name as the label.
+	 * NOTE: assuming each LabelT defines an unique string representation.
+	 * @return An Automaton representing this DFA.
+	 */
+	public DeterministicAutomaton asLTLAutomaton() {
+
+		// Initialize the automaton
+		DefaultAutomatonFactory automatonFactory = new DefaultAutomatonFactory();
+
+		// Convert all nodes
+		Map<DNode<LabelT>,State> nodesConversion = new HashMap<>();
+		for (DNode<LabelT> node: this) {
+			State s = new State();
+			automatonFactory.updateState(s, node.id, node.getFinalFlag());
+			nodesConversion.put(node, s);
+		}
+
+		// Convert all arcs
+		for (DNode<LabelT> node: this) {
+			for (LabelT arc: node.getLabels()) {
+				State s1 = nodesConversion.get(node);
+				State s2 = nodesConversion.get(node.followArc(arc));
+				automatonFactory.addPropositionTransition(s1, s2, arc.toString());
+			}
+		}
+
+		// Set initial state and return
+		automatonFactory.initialState(nodesConversion.get(this.firstNode));
+		return new DeterministicAutomaton(automatonFactory.getAutomaton(), false);
 	}
 
 
@@ -332,6 +392,7 @@ public class DFA<LabelT>
 		n2.setFinalFlag(true);
 		dfa.firstNode.setFinalFlag(true);
 		DNode<Character> n4 = dfa.newChild(n2, 'c');
+		n2.addArc('h', n4);
 		n4.setFinalFlag(true);
 
 		// Test parsing
@@ -348,9 +409,21 @@ public class DFA<LabelT>
 
 		// Test Latex
 		LatexPrintableGraph printableGraph = dfa;
-		LatexSaver.saveLatexFile(printableGraph, new File("latex/dfa.tex"), 1);
+		LatexSaver.saveLatexFile(printableGraph, new File("test/dfa.tex"), 1);
 
 		System.out.println();
+
+		// LTL2Automaton
+		System.out.println("Testing asLTLAutomaton()");
+		DeterministicAutomaton automaton = dfa.asLTLAutomaton();
+		try (FileWriter writer = new FileWriter("test/ltlautomaton.dot")) {
+			BufferedWriter bWriter = new BufferedWriter(writer);
+			DOTExporter.exportToDot(automaton, "test/ltlautomaton.dot", bWriter);
+			bWriter.flush();
+			System.out.println("Written DOT file in test/ltlautomaton.dot");
+		} catch (IOException e) {
+			throw new RuntimeException("IO error", e);
+		}
 	}
 
 

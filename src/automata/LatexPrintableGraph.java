@@ -38,9 +38,8 @@ public interface LatexPrintableGraph {
 
 	/**
 	 * This function is used to pass options to standalone document class.
-	 * Return the empty string to pass nothing. Otherwise return a
-	 * list of options like: [varwidth]
-	 * @return Latex options for standalone document class
+	 * A list of options like: [varwidth], or null.
+	 * @return Latex options for standalone document class, or null for no options.
 	 */
 	public String standaloneClassLatexOptions();
 }
