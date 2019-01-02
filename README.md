@@ -1,11 +1,11 @@
 
 # Trace-DFA
 
-Finds the minimum Deterministic Finite-State Automaton (*DFA*) that is consisted the given accepted and rejected sequences.
+Finds the minimum Deterministic Finite-State Automaton (*DFA*) that is consistent with the given sequences to accept and to reject.
 
 The program reads .xes files and uses these logs as input sequences.
 
-This project is a small implementation of: Marijn J. H. Heule and Sicco Verwer. 2010. Exact DFA identification using SAT solvers.
+This project implements: Marijn J. H. Heule and Sicco Verwer. 2010. Exact DFA identification using SAT solvers.
 
 
 ## Dependencies
@@ -14,9 +14,10 @@ This project is a small implementation of: Marijn J. H. Heule and Sicco Verwer. 
 * Download OpenXes
 * Download Guava
 * Download Sat4j solver
+* Download LTL2Automaton
 
-Put OpenXes, Guava and Sat4j in a directory named "lib" in the top level directory of the project (the one containing "build.xml").
-
+Put the downloaded libraries (usually as jars) in a directory named "lib" in the top level directory of the project (the one containing "build.xml").
+LTL2Automaton has been added as a dependency just because a DFA can be exported as an automaton of this library. This requirement can be deleted by removing the import/export functionality in DFA.java.
 
 ## Input sequences
 
@@ -24,11 +25,11 @@ The input of the program is composed of two sets of sequences: one for learning 
 
     ant -Dtrain=any_train_dir -Dtest=any_test_dir
 
-Add "OK" in the filename of XES files containing sequences to be accepted by the DFA. Sequences to reject need no modification.
+Each sequence in the log is a trace in XES format composed of events. Just the name of the events are used to identify transitions.  Add "OK" in the filename of XES files containing sequences to be accepted by the DFA. Sequences to reject need no modification.
 
 ## Run
 
-Run with `ant`. To genereate the source documentation, run `ant doc`.
+Run with `ant`. To genereate the documentation, run `ant doc`.
 
 ## Output DFA
 
