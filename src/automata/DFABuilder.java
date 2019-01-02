@@ -56,27 +56,36 @@ public class DFABuilder<LabelT> {
 
 
 	/**
+	 * Touch a state.
+	 * This function creates a new state which is named with the given id.  If id
+	 * has been already used, nothing is done. Nodes need not to be defined in
+	 * advance. However this function is useful if one needs to assing a fixed
+	 * order to the nodes.
+	 * @param state An id
+	 */
+	public void touchState(int state) {
+		aState(state);
+	}
+
+
+	/**
 	 * Set this state as final.
 	 * If necessary, it is added to the graph as a new state.
 	 * @param state The id of a final state
-	 * @return this
 	 */
-	public DFABuilder<LabelT> setFinalState(int state) {
+	public void setFinalState(int state) {
 		DFA.DNode<LabelT> node = aState(state);
 		node.setFinalFlag(true);
-		return this;
 	}
 
 
 	/**
 	 * Set this state as the initial state in the DFA.
 	 * @param state The id of the initial state
-	 * @return this
 	 */
-	public DFABuilder<LabelT> setInitialState(int state) {
+	public void setInitialState(int state) {
 		DFA.DNode<LabelT> node = aState(state);
 		dfa.firstNode = node;
-		return this;
 	}
 
 
@@ -86,13 +95,11 @@ public class DFABuilder<LabelT> {
 	 * @param parent The id of the parent state
 	 * @param label The label of the arc
 	 * @param child The id of the child state
-	 * @return this
 	 */
-	public DFABuilder<LabelT> newArc(int parent, LabelT label, int child) {
+	public void newArc(int parent, LabelT label, int child) {
 		DFA.DNode<LabelT> parentNode = aState(parent);
 		DFA.DNode<LabelT> childNode = aState(child);
 		parentNode.addArc(label, childNode);
-		return this;
 	}
 
 

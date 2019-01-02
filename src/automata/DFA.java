@@ -338,10 +338,12 @@ public class DFA<LabelT>
 
 
 	/**
-	 * Returns this Automaton as a {@link org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton}
+	 * Returns this Automaton as a {@link
+	 * org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton}
 	 * of the LTL2Automaton library.
-	 * Each label is represented as a {@link import org.processmining.ltl2automaton.plugins.automaton.TransitionLabel}
-	 * with a single true preposition with the same name as the label.
+	 * Each label is represented as a {@link
+	 * org.processmining.ltl2automaton.plugins.automaton.TransitionLabel} with a
+	 * single true preposition with the same name as the label.
 	 * NOTE: assuming each LabelT defines an unique string representation.
 	 * @return An Automaton representing this DFA.
 	 */
@@ -374,7 +376,81 @@ public class DFA<LabelT>
 
 
 	/**
-	 * Debugging
+	 * Returns a new DFA built from the given {@link
+	 * org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton}
+	 * of the LTL2Automaton library.
+	 * The retured DFA is equivalent to the given DeterministicAutomaton (they 
+	 * accept the same language), but nodes won't keep the same ID (by design).
+	 * The returned DFA shares the same transition objects as the input
+	 * automaton.
+	 * @param ltlAutomaton The automaton to convert. Its transitions must define
+	 * a deterministic DFA. IDs must be unique.
+	 * @return A new DFA
+	 */
+	public static DFA<Transition> fromLTLAutomaton(
+			DeterministicAutomaton ltlAutomaton) {
+
+		// Build a new DFA
+		DFABuilder<Transition> builder = new DFABuilder<>();
+
+		// Just convert all transitions
+		for (Transition t: ltlAutomaton.transitions()) {
+			builder.newArc(t.getSource().getId(), t, t.getTarget().getId());
+		}
+
+		// Set final states
+		for (State s: ltlAutomaton) {
+			if (s.isAccepting()) {
+				builder.setFinalState(s.getId());
+			}
+		}
+
+		// Set initial
+		builder.setInitialState(ltlAutomaton.getInit().getId());
+
+		return builder.getDFA();
+	}
+
+
+	/**
+	 * Converts this DFA in a new DFA with arcs represented by strings.
+	 * Uses the toString() function of LabelT to convert the edges: returned
+	 * strings must preserve the equals() relation between every pair of labels.
+	 * @return A new DFA that uses strings
+	 */
+	public DFA<String> asStringDFA() {
+
+		// Build a new DFA
+		DFABuilder<String> builder = new DFABuilder<String>();
+
+		// Initialize all states to preserve IDs
+		int newId = 0;
+		for (DNode<LabelT> state: this) {
+			builder.touchState(newId++);
+		}
+		
+		// Convert all transitions
+		for (DNode<LabelT> state: this) {
+			for (LabelT label: state.getLabels()) {
+				builder.newArc(state.id, label.toString(), state.followArc(label).id);
+			}
+
+			// Set final
+			if (state.getFinalFlag()) {
+				builder.setFinalState(state.id);
+			}
+		}
+
+		// Set initial
+		builder.setInitialState(firstNode.id);
+
+		return builder.getDFA();
+	}
+
+
+	/**
+	 * Debugging.
+	 * This is just for testing. See the Doc for the correct usage of this class.
 	 */
 	public static void test() {
 		
@@ -409,11 +485,10 @@ public class DFA<LabelT>
 
 		// Test Latex
 		LatexPrintableGraph printableGraph = dfa;
-		LatexSaver.saveLatexFile(printableGraph, new File("test/dfa.tex"), 1);
-
+		LatexSaver.saveLatexFile(printableGraph, new File("test/dfa.tex"), 1.2);
 		System.out.println();
 
-		// LTL2Automaton
+		// asLTL2Automaton
 		System.out.println("Testing asLTLAutomaton()");
 		DeterministicAutomaton automaton = dfa.asLTLAutomaton();
 		try (FileWriter writer = new FileWriter("test/ltlautomaton.dot")) {
@@ -424,6 +499,26 @@ public class DFA<LabelT>
 		} catch (IOException e) {
 			throw new RuntimeException("IO error", e);
 		}
+
+		// from LTL2Automaton
+		System.out.println("Testing fromLTLAutomaton()");
+		DFA<Transition> dfa2 = DFA.fromLTLAutomaton(automaton);
+		LatexSaver.saveLatexFile(dfa2, new File("test/dfa2.tex"), 1.2);
+
+		DeterministicAutomaton automaton2 = dfa2.asLTLAutomaton();
+		try (FileWriter writer = new FileWriter("test/ltlautomaton2.dot")) {
+			BufferedWriter bWriter = new BufferedWriter(writer);
+			DOTExporter.exportToDot(automaton2, "test/ltlautomaton2.dot", bWriter);
+			bWriter.flush();
+			System.out.println("Written DOT file in test/ltlautomaton2.dot");
+		} catch (IOException e) {
+			throw new RuntimeException("IO error", e);
+		}
+
+		// As string DFA
+		System.out.println("Testing asStringDFA()");
+		DFA<String> dfa3 = dfa2.asStringDFA();
+		LatexSaver.saveLatexFile(dfa3, new File("test/dfa3.tex"), 1.2);
 	}
 
 

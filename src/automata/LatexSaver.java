@@ -30,7 +30,7 @@ public final class LatexSaver {
 	 * @return True if no errors occurred
 	 */
 	public static boolean saveLatexFile(LatexPrintableGraph graph,
-			File texFile, float spaceCm) {
+			File texFile, double spaceCm) {
 
 		// Package options
 		String classOptions = graph.standaloneClassLatexOptions();
