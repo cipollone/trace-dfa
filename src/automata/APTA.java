@@ -151,11 +151,11 @@ public class APTA<LabelT>
 
 	/**
 	 * No further options.
-	 * @return Latex options for standalone document class
+	 * @return No Latex options for standalone document class: null.
 	 */
 	@Override
 	public String standaloneClassLatexOptions() {
-		return "";
+		return null;
 	}
 	
 
@@ -293,7 +293,7 @@ public class APTA<LabelT>
 
 		// Testing LatexSaver class and LatexPrintableGraph interface
 		LatexPrintableGraph printableGraph = tree;
-		LatexSaver.saveLatexFile(printableGraph, new File("latex/apta.tex"), 1);
+		LatexSaver.saveLatexFile(printableGraph, new File("test/apta.tex"), 1);
 
 		System.out.println();
 	}

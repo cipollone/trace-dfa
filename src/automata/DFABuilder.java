@@ -8,9 +8,9 @@ import java.io.File;
 /**
  * This class can be used to build DFA objects.
  * It allows to specify the DFA in terms of the nodes and arcs that contains.
- * States are identified with integers. Every new integer used implicitly
- * generates a new node. All referenced states are kept in a DFABuilder, but
- * unconnected nodes will be deleted from the returned DFA.
+ * States are identified with integers. Every integer used implicitly generates
+ * a new node. All referenced states are kept in a DFABuilder, but unconnected
+ * nodes will be deleted from the returned DFA.
  * @see DFABuilder#newArc
  * @see DFA
  */
@@ -52,6 +52,19 @@ public class DFABuilder<LabelT> {
 	 */
 	public DFABuilder() {
 		states.put(0, dfa.firstNode); // Inital state is already there
+	}
+
+
+	/**
+	 * Touch a state.
+	 * This function creates a new state which is named with the given id.  If id
+	 * has been already used, nothing is done. Nodes need not to be defined in
+	 * advance. However this function is useful if one needs to assing a fixed
+	 * order to the nodes.
+	 * @param state An id
+	 */
+	public void touchState(int state) {
+		aState(state);
 	}
 
 

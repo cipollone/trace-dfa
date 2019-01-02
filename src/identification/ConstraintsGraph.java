@@ -536,6 +536,7 @@ public class ConstraintsGraph
 
 	/**
 	 * Nothing needed here.
+	 * @return null
 	 * @see LatexPrintableGraph
 	 */
 	@Override
@@ -545,12 +546,13 @@ public class ConstraintsGraph
 
 
 	/**
-	 * Nothing needed here.
+	 * No options.
+	 * @return null: no options.
 	 * @see LatexPrintableGraph
 	 */
 	@Override
 	public String standaloneClassLatexOptions() {
-		return "";
+		return null;
 	}
 
 
@@ -639,13 +641,13 @@ public class ConstraintsGraph
 			}
 		}
 
-		LatexSaver.saveLatexFile(tree, new File("latex/apta_c.tex"), 1);
+		LatexSaver.saveLatexFile(tree, new File("test/apta_c.tex"), 1);
 
 		// Create a constraint graph
 		ConstraintsGraph graph = new ConstraintsGraph(tree);
 
 		// Save in Latex
-		LatexSaver.saveLatexFile(graph, new File("latex/graph_c.tex"), 1);
+		LatexSaver.saveLatexFile(graph, new File("test/graph_c.tex"), 1);
 
 		// Testing set of states: ok
 		

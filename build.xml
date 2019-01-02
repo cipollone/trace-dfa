@@ -29,8 +29,8 @@
 
 	<target name="doc">
 		<javadoc sourcepath="${src.dir}"
-			sourcefiles="${src.dir}/${main-class}.java"
-			destdir="${doc.dir}" access="${doc-level}">
+			sourcefiles="${src.dir}/${main-class}.java" destdir="${doc.dir}"
+			access="${doc-level}" use="true">
 			<classpath refid="libs.path"/>
 		</javadoc>
 	</target>
