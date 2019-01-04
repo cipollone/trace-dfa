@@ -169,41 +169,4 @@ public class DimacsSaver {
 	public Map<Integer,Variable> idToVarsMap() {
 		return Collections.unmodifiableMap(idToVars);
 	}
-
-
-	/**
-	 * Debugging
-	 */
-	public static void test() {
-
-		// Create a formula
-		List<Variable> x = Variable.newVars("x_1" , "x_2" , "x_3" , "x_4" , "x_5"
-				, "x_6" , "x_7" , "x_8");
-		Clause c1 = new Clause();
-		Clause c2 = new Clause();
-		Clause c3 = new Clause();
-		Clause c4 = new Clause();
-		c1.addPositiveVariable(x.get(0), x.get(2), x.get(5), x.get(6), x.get(7));
-		c1.addNegatedVariable(x.get(1), x.get(3), x.get(4));
-		c2.addPositiveVariable(x.get(3), x.get(5), x.get(7));
-		c2.addNegatedVariable(x.get(0));
-		c3.addNegatedVariable(x.get(1), x.get(2));
-		c4.addPositiveVariable(x.get(6));
-		Formula f = new Formula();
-		f.addClause(c1, c2, c3, c4);
-		System.out.println(f.toString());
-
-		// Save
-		DimacsSaver saver = new DimacsSaver(f);
-		try {
-			boolean ret = saver.saveToDimacsFile(new File("test.cnf"));
-			System.out.println("File written: " + ret + "\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		// A view on the map used
-		System.out.println(saver.varsToIdMap());
-		System.out.println(saver.idToVarsMap());
-	}
 }

@@ -448,80 +448,6 @@ public class DFA<LabelT>
 	}
 
 
-	/**
-	 * Debugging.
-	 * This is just for testing. See the Doc for the correct usage of this class.
-	 */
-	public static void test() {
-		
-		DNode.test();
-
-		System.out.println("Testing DFA");
-		
-		// Define a graph
-		DFA<Character> dfa = new DFA<>();
-		DNode<Character> n1 = dfa.newChild(dfa.firstNode, 'a');
-		DNode<Character> n2 = dfa.newChild(n1, 'b');
-		DNode<Character> n3 = dfa.newChild(n1, 'c');
-		n3.addArc('a', n1);
-		n3.addArc('g', n3);
-		n2.setFinalFlag(true);
-		dfa.firstNode.setFinalFlag(true);
-		DNode<Character> n4 = dfa.newChild(n2, 'c');
-		n2.addArc('h', n4);
-		n4.setFinalFlag(true);
-
-		// Test parsing
-		List<Character> l;
-		l = new ArrayList<Character>();
-		System.out.println(dfa.parseSequence(l, false));
-		l = Arrays.asList('a','c');
-		System.out.println(dfa.parseSequence(l, false));
-		l = Arrays.asList('a','h');
-		System.out.println(dfa.parseSequence(l, false));
-		l = Arrays.asList('a','c','a','b');
-		System.out.println(dfa.parseSequence(l, false));
-
-
-		// Test Latex
-		LatexPrintableGraph printableGraph = dfa;
-		LatexSaver.saveLatexFile(printableGraph, new File("test/dfa.tex"), 1.2);
-		System.out.println();
-
-		// asLTL2Automaton
-		System.out.println("Testing asLTLAutomaton()");
-		DeterministicAutomaton automaton = dfa.asLTLAutomaton();
-		try (FileWriter writer = new FileWriter("test/ltlautomaton.dot")) {
-			BufferedWriter bWriter = new BufferedWriter(writer);
-			DOTExporter.exportToDot(automaton, "test/ltlautomaton.dot", bWriter);
-			bWriter.flush();
-			System.out.println("Written DOT file in test/ltlautomaton.dot");
-		} catch (IOException e) {
-			throw new RuntimeException("IO error", e);
-		}
-
-		// from LTL2Automaton
-		System.out.println("Testing fromLTLAutomaton()");
-		DFA<Transition> dfa2 = DFA.fromLTLAutomaton(automaton);
-		LatexSaver.saveLatexFile(dfa2, new File("test/dfa2.tex"), 1.2);
-
-		DeterministicAutomaton automaton2 = dfa2.asLTLAutomaton();
-		try (FileWriter writer = new FileWriter("test/ltlautomaton2.dot")) {
-			BufferedWriter bWriter = new BufferedWriter(writer);
-			DOTExporter.exportToDot(automaton2, "test/ltlautomaton2.dot", bWriter);
-			bWriter.flush();
-			System.out.println("Written DOT file in test/ltlautomaton2.dot");
-		} catch (IOException e) {
-			throw new RuntimeException("IO error", e);
-		}
-
-		// As string DFA
-		System.out.println("Testing asStringDFA()");
-		DFA<String> dfa3 = dfa2.asStringDFA();
-		LatexSaver.saveLatexFile(dfa3, new File("test/dfa3.tex"), 1.2);
-	}
-
-
 	// >>> Nested classes
 
 	/**
@@ -588,36 +514,6 @@ public class DFA<LabelT>
 			} else {
 				return Integer.toString(id);
 			}
-		}
-
-
-		/**
-		 * Debugging
-		 */
-		public static void test() {
-
-			System.out.println("Testing DFA.DNode");
-
-			// Testing basic methods
-			DNode<Character> n1 = new DNode<>(1, true);
-			DNode<Character> n2 = new DNode<>(2);
-			DNode<Character> n3 = new DNode<>(3, true);
-
-			n1.addArc('a', n2);
-			n2.addArc('b', n3);
-			n2.addArc('c', n2);
-			n2.addArc('d', n1);
-
-			System.out.println(n2.getLabels()); // ['b', 'c', 'd']
-			System.out.println(n3.getLabels()); // []
-
-			System.out.println(n1.followArc('a').followArc('c')); // 2
-
-			n2.removeArc('h');
-			n2.removeArc('c');
-			System.out.println(n1.followArc('a').followArc('c')); // null
-			
-			System.out.println();
 		}
 	}
 }

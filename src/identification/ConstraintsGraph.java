@@ -610,62 +610,6 @@ public class ConstraintsGraph
 	}
 
 
-	/**
-	 * Debugging
-	 */
-	public static void test() {
-
-		// Build an APTA
-		APTA<String> tree = new APTA<>();
-
-		//String[] stringsToAdd = { "abaa", "abb", "a", "b", "bb"};
-		//boolean[] ok = { true, false, true, false, true };
-		//String[] stringsToAdd = { "aaa", "baa", "ba", "aa", "b", "a", ""};
-		String[] stringsToAdd = {"aaa", "baa", "ba", "aa", "b", "a", "", "aab", "bb", "c", "cb"};
-		boolean[] ok = { true, false, false, true, true, true, false, true, true, true, false};
-
-		List<List<String>> sequencesToAdd = new ArrayList<>();
-		for (int i = 0; i < stringsToAdd.length; ++i) {
-			List<String> seq = new ArrayList<>();
-			sequencesToAdd.add(seq);
-			for (char c: stringsToAdd[i].toCharArray()) {
-				seq.add(new String(new char[]{c}));
-			}
-		}
-
-		for (int i = 0; i < sequencesToAdd.size(); ++i) {
-			if (ok[i]) {
-				tree.acceptSequence(sequencesToAdd.get(i));
-			} else {
-				tree.rejectSequence(sequencesToAdd.get(i));
-			}
-		}
-
-		LatexSaver.saveLatexFile(tree, new File("test/apta_c.tex"), 1);
-
-		// Create a constraint graph
-		ConstraintsGraph graph = new ConstraintsGraph(tree);
-
-		// Save in Latex
-		LatexSaver.saveLatexFile(graph, new File("test/graph_c.tex"), 1);
-
-		// Testing set of states: ok
-		
-		// Testing the set of edges: ok
-		System.out.println(graph.constraints().size() + " constraints");
-
-		// Testing iterators: ok
-		int nodes = 0;
-		for (CNode n: graph) {
-			nodes++;
-		}
-		System.out.println(nodes + " nodes\n");
-
-		// Testing getHighestDegreeNeighbor and getClique: ok
-		System.out.println(graph.getClique());
-	}
-
-
 	// >>> Nested classes
 	
 	/**

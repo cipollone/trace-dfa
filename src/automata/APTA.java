@@ -226,79 +226,6 @@ public class APTA<LabelT>
 	}
 
 
-	/**
-	 * Debugging
-	 */
-	public static void test() {
-		
-		ANode.test();
-
-		System.out.println("Testing APTA");
-
-		// Build a tree
-		APTA<Character> tree = new APTA<Character>();
-
-		// Sequences to add
-		String[] stringsToAdd = { "ciao", "ciar", "ci", "ca", ""};
-		boolean[] ok = { true, false, true, true, true };
-
-		// Convert the sequences
-		List<List<Character>> sequencesToAdd = new ArrayList<>();
-		for (int i = 0; i < stringsToAdd.length; ++i) {
-			List<Character> seq = new ArrayList<>();
-			sequencesToAdd.add(seq);
-			for (Character c: stringsToAdd[i].toCharArray()) {
-				seq.add(c);
-			}
-		}
-
-		// Strings to parse
-		String[] stringsToParse = {"ciao", "c", "ca", "ciar", "cia", "cc", "d", ""};
-
-		// Convert the sequences
-		List<List<Character>> sequencesToParse = new ArrayList<>();
-		for (int i = 0; i < stringsToParse.length; ++i) {
-			List<Character> seq = new ArrayList<>();
-			sequencesToParse.add(seq);
-			for (Character c: stringsToParse[i].toCharArray()) {
-				seq.add(c);
-			}
-		}
-
-		// Test tree expansion
-		for (int i = 0; i < sequencesToAdd.size(); ++i) {
-			if (ok[i]) {
-				tree.acceptSequence(sequencesToAdd.get(i));
-			} else {
-				tree.rejectSequence(sequencesToAdd.get(i));
-			}
-		}
-
-		// Changing a node
-		tree.firstNode.followArc('c').setResponse(Response.REJECT);
-
-		// Test parsing
-		for (List<Character> sequence: sequencesToParse) {
-			System.out.print(sequence + "  ");
-			System.out.println(tree.parseSequenceAPTA(sequence));
-		}
-
-		// Testing Automaton interface
-		System.out.println("Automaton");
-		Automaton<Character> automaton = tree;
-		for (List<Character> sequence: sequencesToParse) {
-			System.out.print(sequence + "  ");
-			System.out.println(automaton.parseSequence(sequence, false));
-		}
-
-		// Testing LatexSaver class and LatexPrintableGraph interface
-		LatexPrintableGraph printableGraph = tree;
-		LatexSaver.saveLatexFile(printableGraph, new File("test/apta.tex"), 1);
-
-		System.out.println();
-	}
-
-
 	// >>> Nested classes
 
 	/**
@@ -448,42 +375,6 @@ public class APTA<LabelT>
 		@Override
 		public String toString() {
 			return id + "_" + response.toString();
-		}
-
-
-		/**
-		 * Debugging
-		 */
-		public static void test() {
-
-			System.out.println("Testing APTA.ANode");
-
-			ANode<Character> n = new ANode<Character>(0);
-			ANode<Character> n1 = new ANode<Character>(1, Response.ACCEPT);
-			ANode<Character> n2 = new ANode<Character>(2);
-			ANode<Character> n3 = new ANode<Character>(3, Response.REJECT);
-
-			n.addArc('a', n1);
-			n.addArc('b', n2);
-			n2.addArc('a', n3);
-
-			System.out.println(n); // 0
-			System.out.println(n.followArc('a')); // 1
-			System.out.println(n.followArc('b')); // 2
-			System.out.println(n.followArc('b').followArc('a')); // 3
-			System.out.println(n.followArc('b').followArc('b')); // null
-			System.out.println(n3.getParent()); // 2
-			System.out.println(n3.getParentLabel()); // a
-
-			n2.removeArc(null);
-			n2.removeArc('b');
-			System.out.println(n3.getParent()); // as before
-			System.out.println(n3.getParentLabel()); // ^
-			n2.removeArc('a');
-			System.out.println(n3.getParent()); // null
-			System.out.println(n3.getParentLabel()); // null
-
-			System.out.println();
 		}
 	}
 }

@@ -56,4 +56,25 @@
 		</java>
 	</target>
 
+	<!-- Creates a jar with the compiled code and all downloaded libraries -->
+	<target name="release-jar" depends="build">
+		<mkdir dir="${build.dir}/lib-jars"/>
+		<unjar dest="${build.dir}/lib-jars">
+			<fileset dir="${lib.dir}">
+				<include name="*.jar"/>
+			</fileset>
+		</unjar>
+		<jar destfile="${build.dir}/${jar-name}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}"/>
+			</manifest>
+			<fileset dir="${build.dir}/classes">
+				<include name="**/*.class"/>
+			</fileset>
+			<fileset dir="${build.dir}/lib-jars">
+				<include name="**/*.class"/>
+				<depth min="1"/>
+			</fileset>
+		</jar>
+	</target>
 </project>

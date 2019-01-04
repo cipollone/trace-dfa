@@ -110,40 +110,4 @@ public class DFABuilder<LabelT> {
 	public DFA<LabelT> getDFA() {
 		return dfa;
 	}
-
-
-	/**
-	 * Debugging
-	 */
-	public static void test() {
-
-		DFABuilder<String> builder = new DFABuilder<String>();
-
-		// Build the graph
-		builder.newArc(0, "ciao", 1);
-		builder.newArc(1, "come", 2);
-		builder.newArc(1, "ciao", 3);
-		builder.newArc(2, "stai", 33);
-		builder.setFinalState(0);
-		builder.setFinalState(2);
-		builder.setFinalState(34);
-
-		// Output
-		DFA<String> dfa = builder.getDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/dfa1.tex"), 1);
-
-		// Changing initial state
-		builder.setInitialState(0);
-		dfa = builder.getDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/dfa2.tex"), 1);
-
-		builder.setInitialState(1);
-		dfa = builder.getDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/dfa3.tex"), 1);
-
-		builder.setInitialState(35);
-		builder.newArc(35, "woooo", 36);
-		dfa = builder.getDFA();
-		LatexSaver.saveLatexFile(dfa, new File("latex/dfa4.tex"), 1);
-	}
 }
