@@ -6,8 +6,6 @@ import util.*;
 
 import java.io.*;
 import java.util.*;
-import org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton;
-import org.processmining.ltl2automaton.plugins.automaton.DOTExporter;
 
 
 public class Main {
@@ -32,14 +30,7 @@ public class Main {
 		LatexSaver.saveLatexFile(dfa, new File("output/dfa.tex"), 2);
 
 		// Save in .dot file
-		DeterministicAutomaton ltlDfa = dfa.asLTLAutomaton();
-		try (FileWriter writer = new FileWriter("output/dfa.dot")) {
-			BufferedWriter bWriter = new BufferedWriter(writer);
-			DOTExporter.exportToDot(ltlDfa, "IdentifiedDFA", bWriter);
-			bWriter.flush();
-		} catch (IOException e) {
-			throw new RuntimeException("IO error", e);
-		}
+		dfa.saveDotFile(new File("output/dfa.dot"));
 
 		// Testing
 		float result = testDFA(dfa, testTracesDir);

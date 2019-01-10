@@ -2,6 +2,7 @@
 package automata;
 
 import java.util.*;
+import java.io.*;
 
 import util.*;
 
@@ -124,6 +125,61 @@ public abstract class AbstractGraph
 
 
 	/**
+	 * Export this graph in a .dot file.
+	 * Dot files are plain text files that represents graphs. It's a common
+	 * format for automata. This dot file is a `digraph', a directed graph.
+	 * The initial node has a single incoming edge from a fake node,
+	 * called `init'.
+	 * @param dotPath The path of the .dot file
+	 * @return True if the file was correctly written.
+	 */
+	public boolean saveDotFile(File dotPath) {
+
+		StringBuilder str = new StringBuilder();
+
+		// Preamble
+		str.append(
+			"digraph \"IdentifiedDFA\" {\n" +
+			"	init [shape=none, label=\"\"];\n" +
+			"	name [shape=note, label=\"IdentifiedDFA\"];\n" +
+			"	rankdir=LR;\n" +
+			"\n");
+
+		// Nodes
+		for (NodeT n: this) {
+			str.append("	q").append(n.id).append(" ").append(n.dotNodeOptions())
+					.append(";\n");
+		}
+		str.append("\n");
+
+		// Arcs
+		for (NodeT n: this) {
+			for (LabelT l: n.getLabels()) {
+				str.append("	q").append(n.id).append(" -> q")
+					.append(n.followArc(l).id).append(" [label=\"")
+					.append(l.toString()).append("\"];\n");
+			}
+		}
+		str.append("	init -> q").append(firstNode.id).append(";\n"); // Init
+
+		// Eof
+		str.append("}");
+
+		// Save
+		File parentDir = dotPath.getParentFile();
+		if (parentDir != null) { parentDir.mkdirs(); }
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(dotPath))) {
+			writer.write(str.toString());
+			writer.flush();
+		} catch (IOException e) {
+			return false;
+		}
+		
+		return true;
+	}
+
+
+	/**
 	 * Debugging
 	 */
 	public static void test() {
@@ -194,6 +250,9 @@ public abstract class AbstractGraph
 		}
 
 		System.out.println();
+
+		// Testing Dot file
+		graph.saveDotFile(new File("tests/dotGraph.dot"));
 	}
 
 

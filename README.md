@@ -14,10 +14,8 @@ This project implements: Marijn J. H. Heule and Sicco Verwer. 2010. Exact DFA id
 * Download OpenXes
 * Download Guava
 * Download Sat4j solver
-* Download LTL2Automaton
 
 Put the downloaded libraries (usually as jars) in a directory named "lib" in the top level directory of the project (the one containing "build.xml").
-LTL2Automaton has been added as a dependency just because a DFA can be exported as an automaton of this library. This requirement can be deleted by removing the import/export functionality in DFA.java.
 
 ## Input sequences
 
@@ -37,3 +35,5 @@ The program will create a directory "output" with tree Latex files:
 * *dfa.tex* is the main output of the program. This is the extracted Finite State Automaton which is consistent with the given traces.
 * *apta.tex* is the APTA the algorithm uses internally to represent the input traces (to learn). For many traces you won't be able to compile this, due to space limitation on the page.
 * *constraints.tex* is the graph of constraints the algorithm internally uses to represent the constraints in the coloring problem. This also could exceed Tex limitations.
+
+The DFA will be also saved in a .dot text file in the same directory. Tools such as GraphViz can read dot files.

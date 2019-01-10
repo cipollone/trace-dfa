@@ -4,11 +4,6 @@ package automata;
 import java.util.*;
 import java.io.*;
 import util.Pair;
-import org.processmining.ltl2automaton.plugins.automaton.DefaultAutomatonFactory;
-import org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton;
-import org.processmining.ltl2automaton.plugins.automaton.State;
-import org.processmining.ltl2automaton.plugins.automaton.Transition;
-import org.processmining.ltl2automaton.plugins.automaton.DOTExporter;
 
 
 /**
@@ -299,6 +294,7 @@ public class DFA<LabelT>
 		// Open
 		StringBuilder stringB = new StringBuilder();
 		stringB.append("\n");
+		stringB.append("\\vspace{2em}\n");
 		stringB.append("\\textbf{Transitions}\n");
 		stringB.append("\\begin{flushleft}\n");
 		stringB.append("\\begin{description}\n");
@@ -337,7 +333,7 @@ public class DFA<LabelT>
 	}
 
 
-	/**
+	/*
 	 * Returns this Automaton as a {@link
 	 * org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton}
 	 * of the LTL2Automaton library.
@@ -347,6 +343,7 @@ public class DFA<LabelT>
 	 * NOTE: assuming each LabelT defines an unique string representation.
 	 * @return An Automaton representing this DFA.
 	 */
+	/* -- Not needed. use saveDotFile() -- 
 	public DeterministicAutomaton asLTLAutomaton() {
 
 		// Initialize the automaton
@@ -373,9 +370,10 @@ public class DFA<LabelT>
 		automatonFactory.initialState(nodesConversion.get(this.firstNode));
 		return new DeterministicAutomaton(automatonFactory.getAutomaton(), false);
 	}
+	*/
 
 
-	/**
+	/*
 	 * Returns a new DFA built from the given {@link
 	 * org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton}
 	 * of the LTL2Automaton library.
@@ -387,6 +385,7 @@ public class DFA<LabelT>
 	 * a deterministic DFA. IDs must be unique.
 	 * @return A new DFA
 	 */
+	/* -- Not needed. use saveDotFile() -- 
 	public static DFA<Transition> fromLTLAutomaton(
 			DeterministicAutomaton ltlAutomaton) {
 
@@ -410,6 +409,7 @@ public class DFA<LabelT>
 
 		return builder.getDFA();
 	}
+	*/
 
 
 	/**
@@ -488,6 +488,7 @@ public class DFA<LabelT>
 		LatexSaver.saveLatexFile(printableGraph, new File("test/dfa.tex"), 1.2);
 		System.out.println();
 
+		/* Removed
 		// asLTL2Automaton
 		System.out.println("Testing asLTLAutomaton()");
 		DeterministicAutomaton automaton = dfa.asLTLAutomaton();
@@ -514,11 +515,15 @@ public class DFA<LabelT>
 		} catch (IOException e) {
 			throw new RuntimeException("IO error", e);
 		}
+		*/
 
 		// As string DFA
 		System.out.println("Testing asStringDFA()");
-		DFA<String> dfa3 = dfa2.asStringDFA();
+		DFA<String> dfa3 = dfa.asStringDFA();
 		LatexSaver.saveLatexFile(dfa3, new File("test/dfa3.tex"), 1.2);
+
+		// Dot file export
+		dfa.saveDotFile(new File("test/dfa.dot"));
 	}
 
 
@@ -574,6 +579,16 @@ public class DFA<LabelT>
 		 */
 		public boolean getFinalFlag() {
 			return this.isFinal;
+		}
+
+
+		@Override
+		public String dotNodeOptions() {
+			if (isFinal) {
+				return "[shape=doublecircle]";
+			} else {
+				return "[shape=circle]";
+			}
 		}
 
 

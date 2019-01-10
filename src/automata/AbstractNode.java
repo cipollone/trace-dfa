@@ -97,6 +97,21 @@ public abstract class AbstractNode
 
 
 	/**
+	 * Returns the options of this node in the dot file.
+	 * An {@link AbstractGraph} can be saved in a dot file. This function
+	 * returns the options of each node in the dot file. By default, it
+	 * returns "[shape=circle]". However, this can be overridden in the
+	 * subclasses. An empty string means no options.
+	 * @return "[shape=circle]"
+	 * string.
+	 * @see AbstractGraph#saveDotFile
+	 */
+	public String dotNodeOptions() {
+		return "[shape=circle]";
+	}
+
+
+	/**
 	 * String representation
 	 * @return The id
 	 */

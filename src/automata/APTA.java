@@ -291,6 +291,9 @@ public class APTA<LabelT>
 		LatexPrintableGraph printableGraph = tree;
 		LatexSaver.saveLatexFile(printableGraph, new File("test/apta.tex"), 1);
 
+		// Testing dot exporter
+		tree.saveDotFile(new File("test/apta.dot"));
+
 		System.out.println();
 	}
 
@@ -439,6 +442,21 @@ public class APTA<LabelT>
 			}
 			return oldNode;
 		}
+
+		
+		@Override
+		public String dotNodeOptions() {
+
+			switch (response) {
+				case ACCEPT:
+					return "[shape=doublecircle]";
+				case REJECT:
+					return "[shape=circle, style=filled]";
+				default:
+			}
+			return "[shape=circle]";
+		}
+
 
 
 		@Override
