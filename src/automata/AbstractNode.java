@@ -16,8 +16,8 @@ import java.util.*;
  *	class SubNode<LabelT> extends AbstractNode<LabelT,SubNode<LabelT>>
  * }</pre>
  */
-public abstract class AbstractNode<LabelT,
-		NodeT extends AbstractNode<LabelT,NodeT>> {
+public abstract class AbstractNode
+		<LabelT, NodeT extends AbstractNode<LabelT,NodeT>> {
 
 	// >>> Fields
 	
@@ -93,6 +93,21 @@ public abstract class AbstractNode<LabelT,
 		}
 
 		outArcs.put(label, node);
+	}
+
+
+	/**
+	 * Returns the options of this node in the dot file.
+	 * An {@link AbstractGraph} can be saved in a dot file. This function
+	 * returns the options of each node in the dot file. By default, it
+	 * returns "[shape=circle]". However, this can be overridden in the
+	 * subclasses. An empty string means no options.
+	 * @return "[shape=circle]"
+	 * string.
+	 * @see AbstractGraph#saveDotFile
+	 */
+	public String dotNodeOptions() {
+		return "[shape=circle]";
 	}
 
 

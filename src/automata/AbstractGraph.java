@@ -2,6 +2,7 @@
 package automata;
 
 import java.util.*;
+import java.io.*;
 
 import util.*;
 
@@ -21,8 +22,8 @@ import util.*;
  * }</pre>
  * @see AbstractNode
  */
-public abstract class AbstractGraph<LabelT,
-			NodeT extends AbstractNode<LabelT,NodeT>>
+public abstract class AbstractGraph
+			<LabelT, NodeT extends AbstractNode<LabelT,NodeT>>
 			implements Iterable<NodeT> {
 
 	// >>> Fields
@@ -43,7 +44,7 @@ public abstract class AbstractGraph<LabelT,
 	 * @param id the id
 	 * @return A new Node
 	 */
-	abstract NodeT newNodeObj(int id);
+	abstract protected NodeT newNodeObj(int id);
 
 
 	/**
@@ -120,6 +121,61 @@ public abstract class AbstractGraph<LabelT,
 	@Override
 	public Iterator<NodeT> iterator() {
 		return new DepthPreIterator();
+	}
+
+
+	/**
+	 * Export this graph in a .dot file.
+	 * Dot files are plain text files that represents graphs. It's a common
+	 * format for automata. This dot file is a `digraph', a directed graph.
+	 * The initial node has a single incoming edge from a fake node,
+	 * called `init'.
+	 * @param dotPath The path of the .dot file
+	 * @return True if the file was correctly written.
+	 */
+	public boolean saveDotFile(File dotPath) {
+
+		StringBuilder str = new StringBuilder();
+
+		// Preamble
+		str.append(
+			"digraph \"IdentifiedDFA\" {\n" +
+			"	init [shape=none, label=\"\"];\n" +
+			"	name [shape=note, label=\"IdentifiedDFA\"];\n" +
+			"	rankdir=LR;\n" +
+			"\n");
+
+		// Nodes
+		for (NodeT n: this) {
+			str.append("	q").append(n.id).append(" ").append(n.dotNodeOptions())
+					.append(";\n");
+		}
+		str.append("\n");
+
+		// Arcs
+		for (NodeT n: this) {
+			for (LabelT l: n.getLabels()) {
+				str.append("	q").append(n.id).append(" -> q")
+					.append(n.followArc(l).id).append(" [label=\"")
+					.append(l.toString()).append("\"];\n");
+			}
+		}
+		str.append("	init -> q").append(firstNode.id).append(";\n"); // Init
+
+		// Eof
+		str.append("}");
+
+		// Save
+		File parentDir = dotPath.getParentFile();
+		if (parentDir != null) { parentDir.mkdirs(); }
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(dotPath))) {
+			writer.write(str.toString());
+			writer.flush();
+		} catch (IOException e) {
+			return false;
+		}
+		
+		return true;
 	}
 
 

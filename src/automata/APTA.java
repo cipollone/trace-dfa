@@ -22,7 +22,7 @@ public class APTA<LabelT>
 	 * @return A new ANode
 	 */
 	@Override
-	ANode<LabelT> newNodeObj(int id) {
+	protected ANode<LabelT> newNodeObj(int id) {
 		return new ANode<LabelT>(id);
 	}
 	
@@ -207,22 +207,18 @@ public class APTA<LabelT>
 	/**
 	 * Extends this APTA to accept this sequence.
 	 * @param sequence A list of labels
-	 * @return This APTA
 	 */
-	public APTA<LabelT> acceptSequence(List<LabelT> sequence) {
+	public void acceptSequence(List<LabelT> sequence) {
 		addSequence(sequence, Response.ACCEPT);
-		return this;
 	}
 
 
 	/**
 	 * Extends this APTA to reject this sequence
 	 * @param sequence A list of labels
-	 * @return This APTA
 	 */
-	public APTA<LabelT> rejectSequence(List<LabelT> sequence) {
+	public void rejectSequence(List<LabelT> sequence) {
 		addSequence(sequence, Response.REJECT);
-		return this;
 	}
 
 
@@ -370,6 +366,21 @@ public class APTA<LabelT>
 			}
 			return oldNode;
 		}
+
+		
+		@Override
+		public String dotNodeOptions() {
+
+			switch (response) {
+				case ACCEPT:
+					return "[shape=doublecircle]";
+				case REJECT:
+					return "[shape=circle, style=filled]";
+				default:
+			}
+			return "[shape=circle]";
+		}
+
 
 
 		@Override

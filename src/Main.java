@@ -29,6 +29,9 @@ public class Main {
 		dfa.useLegend(true);
 		LatexSaver.saveLatexFile(dfa, new File("output/dfa.tex"), 2);
 
+		// Save in .dot file
+		dfa.saveDotFile(new File("output/dfa.dot"));
+
 		// Testing
 		float result = testDFA(dfa, testTracesDir);
 		System.out.println("Consistent in " + (result*100) + "% of traces.");
