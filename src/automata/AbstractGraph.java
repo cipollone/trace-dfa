@@ -21,8 +21,8 @@ import util.*;
  * }</pre>
  * @see AbstractNode
  */
-public abstract class AbstractGraph<LabelT,
-			NodeT extends AbstractNode<LabelT,NodeT>>
+public abstract class AbstractGraph
+			<LabelT, NodeT extends AbstractNode<LabelT,NodeT>>
 			implements Iterable<NodeT> {
 
 	// >>> Fields
@@ -43,7 +43,7 @@ public abstract class AbstractGraph<LabelT,
 	 * @param id the id
 	 * @return A new Node
 	 */
-	abstract NodeT newNodeObj(int id);
+	abstract protected NodeT newNodeObj(int id);
 
 
 	/**

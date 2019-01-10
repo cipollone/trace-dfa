@@ -129,6 +129,8 @@ public class DimacsSaver {
 	 */
 	public boolean saveToDimacsFile(File file) throws IOException {
 
+		file.getParentFile().mkdirs(); // Create the path if needed
+
 		// Create a new file
 		try (FileOutputStream fileStream = new FileOutputStream(file)) {
 

@@ -16,8 +16,8 @@ import java.util.*;
  *	class SubNode<LabelT> extends AbstractNode<LabelT,SubNode<LabelT>>
  * }</pre>
  */
-public abstract class AbstractNode<LabelT,
-		NodeT extends AbstractNode<LabelT,NodeT>> {
+public abstract class AbstractNode
+		<LabelT, NodeT extends AbstractNode<LabelT,NodeT>> {
 
 	// >>> Fields
 	

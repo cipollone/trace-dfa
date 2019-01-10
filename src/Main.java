@@ -6,6 +6,8 @@ import util.*;
 
 import java.io.*;
 import java.util.*;
+import org.processmining.ltl2automaton.plugins.automaton.DeterministicAutomaton;
+import org.processmining.ltl2automaton.plugins.automaton.DOTExporter;
 
 
 public class Main {
@@ -28,6 +30,16 @@ public class Main {
 		// Draw the DFA in Latex
 		dfa.useLegend(true);
 		LatexSaver.saveLatexFile(dfa, new File("output/dfa.tex"), 2);
+
+		// Save in .dot file
+		DeterministicAutomaton ltlDfa = dfa.asLTLAutomaton();
+		try (FileWriter writer = new FileWriter("output/dfa.dot")) {
+			BufferedWriter bWriter = new BufferedWriter(writer);
+			DOTExporter.exportToDot(ltlDfa, "IdentifiedDFA", bWriter);
+			bWriter.flush();
+		} catch (IOException e) {
+			throw new RuntimeException("IO error", e);
+		}
 
 		// Testing
 		float result = testDFA(dfa, testTracesDir);
@@ -167,6 +179,7 @@ public class Main {
 	 */
 	public static void test() {
 
+		/*
 		APTA<String> apta = new APTA<String>();
 
 		// Sequences to add
@@ -216,5 +229,31 @@ public class Main {
 		LatexSaver.saveLatexFile(apta, new File("tests/apta.tex"), 1);
 		LatexSaver.saveLatexFile(cg, new File("tests/constraints.tex"), 1);
 		LatexSaver.saveLatexFile(dfa, new File("tests/dfa.tex"), 2);
+		*/
+
+		/*
+		DFABuilder<Character> builder = new DFABuilder<>();
+		builder.newArc(0, 'a', 1);
+		builder.newArc(1, 'b', 50);
+		builder.newArc(50, 'c', 1);
+		builder.setFinalState(50);
+
+		builder.setInitialState(50);
+		*/
+
+		/*
+		DFABuilder<String> builder = new DFABuilder<>();
+		builder.newArc(0, "very", 0);
+		builder.newArc(0, "many", 1);
+		builder.newArc(0, "complex", 1);
+		builder.newArc(0, "long", 1);
+		builder.newArc(1, "arc labels", 2);
+		builder.newArc(1, "transitions", 2);
+
+		DFA<String> dfa = builder.getDFA();
+		dfa.useLegend(true);
+		LatexSaver.saveLatexFile(dfa, new File("tests/dfa-built.tex"), 1);
+		*/
+
 	}
 }

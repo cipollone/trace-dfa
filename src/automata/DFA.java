@@ -38,7 +38,7 @@ public class DFA<LabelT>
 	 * @return A new DNode
 	 */
 	@Override
-	DNode<LabelT> newNodeObj(int id) {
+	protected DNode<LabelT> newNodeObj(int id) {
 		return new DNode<LabelT>(id);
 	}
 	
