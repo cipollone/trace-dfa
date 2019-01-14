@@ -29,11 +29,18 @@ Each sequence in the log is a trace in XES format composed of events. Just the n
 
 Run with `ant`. To genereate the documentation, run `ant doc`.
 
+Ant always passes the train and test directories to the program (either the default values or the ones specified with options). If the program is executed directly, we need to explicitly pass the two directories. For example:
+
+    java -jar TraceDFA.jar traces/train/ traces/test/
+
+when the program is provided as a single Jar.
+
 ## Output DFA
 
 The program will create a directory "output" with tree Latex files:
+
 * *dfa.tex* is the main output of the program. This is the extracted Finite State Automaton which is consistent with the given traces.
-* *apta.tex* is the APTA the algorithm uses internally to represent the input traces (to learn). For many traces you won't be able to compile this, due to space limitation on the page.
+* *apta.tex* is the APTA the algorithm uses internally to represent the input traces (to learn). For a big number of traces you won't be able to compile this, due to space limitation of the Tex page.
 * *constraints.tex* is the graph of constraints the algorithm internally uses to represent the constraints in the coloring problem. This also could exceed Tex limitations.
 
 The DFA will be also saved in a .dot text file in the same directory. Tools such as GraphViz can read dot files.
