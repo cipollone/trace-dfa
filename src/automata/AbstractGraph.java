@@ -139,9 +139,9 @@ public abstract class AbstractGraph
 
 		// Preamble
 		str.append(
-			"digraph \"IdentifiedDFA\" {\n" +
+			"digraph \"Automaton\" {\n" +
 			"	init [shape=none, label=\"\"];\n" +
-			"	name [shape=note, label=\"IdentifiedDFA\"];\n" +
+			"	name [shape=note, label=\"Automaton\"];\n" +
 			"	rankdir=LR;\n" +
 			"\n");
 
